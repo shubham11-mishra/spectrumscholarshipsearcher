@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface ShortlistContextType {
   shortlisted: Set<string>;
@@ -22,6 +23,7 @@ export const useShortlist = () => useContext(ShortlistContext);
 
 export const ShortlistProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +50,14 @@ export const ShortlistProvider = ({ children }: { children: ReactNode }) => {
 
   const toggle = useCallback(
     async (id: string) => {
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Sign in required",
+          description: "Please log in or sign up to shortlist scholarships.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const isCurrentlyShortlisted = shortlisted.has(id);
 
