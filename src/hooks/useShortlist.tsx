@@ -23,6 +23,7 @@ export const useShortlist = () => useContext(ShortlistContext);
 
 export const ShortlistProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
