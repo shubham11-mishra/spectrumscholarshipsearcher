@@ -35,6 +35,141 @@ export type Database = {
         }
         Relationships: []
       }
+      scholarships: {
+        Row: {
+          acara_id: string | null
+          application_close_date: string | null
+          application_fee: string | null
+          application_open_date: string | null
+          category: string | null
+          closing_label: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          days_left: string | null
+          description: string | null
+          eligibility_criteria: string | null
+          extraction_confidence_score: string | null
+          gender: string | null
+          gender_eligibility: string | null
+          id: string
+          is_active: string | null
+          last_verified_at: string | null
+          number_awarded: string | null
+          overview: string | null
+          postcode: string | null
+          program_name: string | null
+          program_type: string | null
+          row_number: number | null
+          scholarship_confidence: string | null
+          scholarship_url: string | null
+          school_name: string
+          school_sector: string | null
+          school_type: string | null
+          sector: string | null
+          special_conditions: string | null
+          state: string | null
+          sub_type: string | null
+          suburb: string | null
+          test_month: string | null
+          test_provider: string | null
+          url_status: string | null
+          value_aud: string | null
+          value_num: string | null
+          value_type: string | null
+          website_url: string | null
+          year_levels: string | null
+        }
+        Insert: {
+          acara_id?: string | null
+          application_close_date?: string | null
+          application_fee?: string | null
+          application_open_date?: string | null
+          category?: string | null
+          closing_label?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          days_left?: string | null
+          description?: string | null
+          eligibility_criteria?: string | null
+          extraction_confidence_score?: string | null
+          gender?: string | null
+          gender_eligibility?: string | null
+          id?: string
+          is_active?: string | null
+          last_verified_at?: string | null
+          number_awarded?: string | null
+          overview?: string | null
+          postcode?: string | null
+          program_name?: string | null
+          program_type?: string | null
+          row_number?: number | null
+          scholarship_confidence?: string | null
+          scholarship_url?: string | null
+          school_name: string
+          school_sector?: string | null
+          school_type?: string | null
+          sector?: string | null
+          special_conditions?: string | null
+          state?: string | null
+          sub_type?: string | null
+          suburb?: string | null
+          test_month?: string | null
+          test_provider?: string | null
+          url_status?: string | null
+          value_aud?: string | null
+          value_num?: string | null
+          value_type?: string | null
+          website_url?: string | null
+          year_levels?: string | null
+        }
+        Update: {
+          acara_id?: string | null
+          application_close_date?: string | null
+          application_fee?: string | null
+          application_open_date?: string | null
+          category?: string | null
+          closing_label?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          days_left?: string | null
+          description?: string | null
+          eligibility_criteria?: string | null
+          extraction_confidence_score?: string | null
+          gender?: string | null
+          gender_eligibility?: string | null
+          id?: string
+          is_active?: string | null
+          last_verified_at?: string | null
+          number_awarded?: string | null
+          overview?: string | null
+          postcode?: string | null
+          program_name?: string | null
+          program_type?: string | null
+          row_number?: number | null
+          scholarship_confidence?: string | null
+          scholarship_url?: string | null
+          school_name?: string
+          school_sector?: string | null
+          school_type?: string | null
+          sector?: string | null
+          special_conditions?: string | null
+          state?: string | null
+          sub_type?: string | null
+          suburb?: string | null
+          test_month?: string | null
+          test_provider?: string | null
+          url_status?: string | null
+          value_aud?: string | null
+          value_num?: string | null
+          value_type?: string | null
+          website_url?: string | null
+          year_levels?: string | null
+        }
+        Relationships: []
+      }
       shortlisted_schools: {
         Row: {
           created_at: string
