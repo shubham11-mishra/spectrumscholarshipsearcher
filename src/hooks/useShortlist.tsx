@@ -50,7 +50,14 @@ export const ShortlistProvider = ({ children }: { children: ReactNode }) => {
 
   const toggle = useCallback(
     async (id: string) => {
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Sign in required",
+          description: "Please log in or sign up to shortlist scholarships.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const isCurrentlyShortlisted = shortlisted.has(id);
 
