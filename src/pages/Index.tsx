@@ -1,8 +1,10 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
 import { SchoolScholarship, loadScholarshipsFromCSV } from "@/data/csvScholarships";
+import { matchesExactFilter, matchesInterestCategory, matchesSearch } from "@/lib/scholarshipFilters";
 import { Filter, X, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,7 +16,6 @@ const Index = () => {
   const [schools, setSchools] = useState<SchoolScholarship[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
   const [sectorFilter, setSectorFilter] = useState("all");
@@ -32,7 +33,7 @@ const Index = () => {
     });
   }, []);
 
-  const handleSearch = useCallback(() => setActiveSearch(searchQuery), [searchQuery]);
+  const handleSearch = () => setSearchQuery((prev) => prev.trim());
 
   // Derive unique filter options from data
   const filterOptions = useMemo(() => {
@@ -42,11 +43,11 @@ const Index = () => {
     const valueTypes = new Set<string>();
     const sectors = new Set<string>();
     schools.forEach((s) => {
-      if (s.state) states.add(s.state);
-      if (s.category) categories.add(s.category);
-      if (s.gender) genders.add(s.gender);
-      if (s.value_type) valueTypes.add(s.value_type);
-      if (s.school_sector) sectors.add(s.school_sector);
+      if (s.state?.trim()) states.add(s.state.trim());
+      if (s.category?.trim()) categories.add(s.category.trim());
+      if (s.gender?.trim()) genders.add(s.gender.trim());
+      if (s.value_type?.trim()) valueTypes.add(s.value_type.trim());
+      if (s.school_sector?.trim()) sectors.add(s.school_sector.trim());
     });
     return {
       states: Array.from(states).sort(),
@@ -61,25 +62,16 @@ const Index = () => {
     let data = schools.filter((s) => {
       if (s.scholarship_confidence === "not_found") return false;
       // Personalized filter: only show user's interest categories
-      if (user && interests.length > 0 && showPersonalized && s.category) {
-        if (!interests.some((i) => i.toLowerCase() === s.category.toLowerCase())) return false;
+      if (user && interests.length > 0 && showPersonalized) {
+        if (!matchesInterestCategory(s.category, interests)) return false;
       }
-      if (activeSearch) {
-        const q = activeSearch.toLowerCase();
-        if (
-          !s.school_name.toLowerCase().includes(q) &&
-          !s.suburb.toLowerCase().includes(q) &&
-          !s.postcode.includes(q) &&
-          !(s.program_name && s.program_name.toLowerCase().includes(q))
-        )
-          return false;
-      }
-      if (confidenceFilter !== "all" && s.scholarship_confidence !== confidenceFilter) return false;
-      if (sectorFilter !== "all" && s.school_sector !== sectorFilter) return false;
-      if (stateFilter !== "all" && s.state !== stateFilter) return false;
-      if (categoryFilter !== "all" && s.category !== categoryFilter) return false;
-      if (genderFilter !== "all" && s.gender !== genderFilter) return false;
-      if (valueTypeFilter !== "all" && s.value_type !== valueTypeFilter) return false;
+      if (!matchesSearch(s, searchQuery)) return false;
+      if (confidenceFilter !== "all" && !matchesExactFilter(s.scholarship_confidence, confidenceFilter)) return false;
+      if (!matchesExactFilter(s.school_sector, sectorFilter)) return false;
+      if (!matchesExactFilter(s.state, stateFilter)) return false;
+      if (!matchesExactFilter(s.category, categoryFilter)) return false;
+      if (!matchesExactFilter(s.gender, genderFilter)) return false;
+      if (!matchesExactFilter(s.value_type, valueTypeFilter)) return false;
       return true;
     });
 
@@ -94,7 +86,7 @@ const Index = () => {
       case "value": data.sort((a, b) => (parseInt(b.value_num) || 0) - (parseInt(a.value_num) || 0)); break;
     }
     return data;
-  }, [schools, activeSearch, sortBy, confidenceFilter, sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter, user, interests, showPersonalized]);
+  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter, user, interests, showPersonalized]);
 
   const counts = useMemo(() => {
     const visible = schools.filter((s) => s.scholarship_confidence !== "not_found");
@@ -120,6 +112,8 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
       <HeroSection searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
+
+      {user && interests.length === 0 && <InterestSetupBanner />}
 
       {/* Personalized banner */}
       {user && interests.length > 0 && (

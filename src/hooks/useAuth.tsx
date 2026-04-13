@@ -29,11 +29,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [interests, setInterests] = useState<string[]>([]);
 
   const fetchInterests = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_interests")
       .select("category")
       .eq("user_id", userId);
-    setInterests(data?.map((d) => d.category) || []);
+
+    if (error) {
+      console.error("Error loading user interests:", error);
+      setInterests([]);
+      return [];
+    }
+
+    const categories = data?.map((d) => d.category) || [];
+    setInterests(categories);
+    return categories;
+  };
+
+  const syncInterestsFromMetadata = async (sessionUser: User) => {
+    const existingInterests = await fetchInterests(sessionUser.id);
+    if (existingInterests.length > 0) return;
+
+    const metadataInterests = Array.isArray(sessionUser.user_metadata?.interests)
+      ? [...new Set(sessionUser.user_metadata.interests.filter((value): value is string => typeof value === "string" && value.trim().length > 0))]
+      : [];
+
+    if (metadataInterests.length === 0) return;
+
+    const { error } = await supabase.from("user_interests").insert(
+      metadataInterests.map((category) => ({ user_id: sessionUser.id, category }))
+    );
+
+    if (error) {
+      console.error("Error syncing user interests:", error);
+      return;
+    }
+
+    setInterests(metadataInterests);
   };
 
   const refreshInterests = async () => {
@@ -46,7 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchInterests(session.user.id), 0);
+          setTimeout(() => syncInterestsFromMetadata(session.user), 0);
         } else {
           setInterests([]);
         }
@@ -57,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchInterests(session.user.id);
+      if (session?.user) syncInterestsFromMetadata(session.user);
       setLoading(false);
     });
 
