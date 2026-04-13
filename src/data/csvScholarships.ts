@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
 export interface SchoolScholarship {
   row: string;
   acara_id: string;
@@ -43,71 +41,131 @@ export interface SchoolScholarship {
   last_verified_at: string;
 }
 
-export async function loadScholarshipsFromCSV(): Promise<SchoolScholarship[]> {
-  // Fetch all scholarships from the database (pagination to handle >1000 rows)
-  let allData: any[] = [];
-  let from = 0;
-  const pageSize = 1000;
-  
-  while (true) {
-    const { data, error } = await supabase
-      .from("scholarships")
-      .select("*")
-      .range(from, from + pageSize - 1);
-    
-    if (error) {
-      console.error("Error loading scholarships:", error);
-      break;
-    }
-    
-    if (!data || data.length === 0) break;
-    allData = allData.concat(data);
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
 
-  return allData.map((obj: any) => ({
-    row: String(obj.row_number || ""),
-    acara_id: obj.acara_id || "",
-    school_name: obj.school_name || "",
-    suburb: obj.suburb || "",
-    postcode: obj.postcode || "",
-    state: obj.state || "",
-    sector: obj.sector || "",
-    school_sector: obj.school_sector || "",
-    school_type: obj.school_type || "",
-    gender: obj.gender || "",
-    website_url: obj.website_url && obj.website_url !== "not_found" ? obj.website_url : "",
-    scholarship_url: obj.scholarship_url || "",
-    scholarship_confidence: (obj.scholarship_confidence || "not_found") as SchoolScholarship["scholarship_confidence"],
-    url_status: obj.url_status || "",
-    program_name: obj.program_name || "",
-    program_type: obj.program_type || "",
-    category: obj.category || "",
-    sub_type: obj.sub_type || "",
-    gender_eligibility: obj.gender_eligibility || "",
-    overview: obj.overview || "",
-    description: obj.description || "",
-    eligibility_criteria: obj.eligibility_criteria || "",
-    year_levels: obj.year_levels || "",
-    application_open_date: obj.application_open_date || "",
-    application_close_date: obj.application_close_date || "",
-    closing_label: obj.closing_label || "",
-    days_left: obj.days_left || "",
-    value_aud: obj.value_aud || "",
-    value_num: obj.value_num || "",
-    value_type: obj.value_type || "",
-    number_awarded: obj.number_awarded || "",
-    test_provider: obj.test_provider || "",
-    test_month: obj.test_month || "",
-    application_fee: obj.application_fee || "",
-    special_conditions: obj.special_conditions || "",
-    contact_phone: obj.contact_phone || "",
-    contact_email: obj.contact_email || "",
-    is_active: obj.is_active || "",
-    extraction_confidence_score: obj.extraction_confidence_score || "",
-    last_verified_at: obj.last_verified_at || "",
-  }));
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+export async function loadScholarshipsFromCSV(): Promise<SchoolScholarship[]> {
+  try {
+    const response = await fetch("/data/scholarships.csv");
+    if (!response.ok) throw new Error("Failed to load CSV");
+    const text = await response.text();
+    const lines = text.split("\n").filter((l) => l.trim().length > 0);
+
+    if (lines.length < 2) return [];
+
+    const headers = parseCSVLine(lines[0]);
+
+    const CSV_TO_FIELD: Record<string, keyof SchoolScholarship> = {
+      row: "row",
+      acara_id: "acara_id",
+      school_name: "school_name",
+      suburb: "suburb",
+      postcode: "postcode",
+      state: "state",
+      sector: "sector",
+      school_sector: "school_sector",
+      school_type: "school_type",
+      gender: "gender",
+      website_url: "website_url",
+      scholarship_url: "scholarship_url",
+      scholarship_confidence: "scholarship_confidence",
+      url_status: "url_status",
+      program_name: "program_name",
+      program_type: "program_type",
+      category: "category",
+      sub_type: "sub_type",
+      gender_eligibility: "gender_eligibility",
+      overview: "overview",
+      description: "description",
+      eligibility_criteria: "eligibility_criteria",
+      year_levels: "year_levels",
+      application_open_date: "application_open_date",
+      application_close_date: "application_close_date",
+      closing_label: "closing_label",
+      days_left: "days_left",
+      value_aud: "value_aud",
+      value_num: "value_num",
+      value_type: "value_type",
+      number_awarded: "number_awarded",
+      test_provider: "test_provider",
+      test_month: "test_month",
+      application_fee: "application_fee",
+      special_conditions: "special_conditions",
+      contact_phone: "contact_phone",
+      contact_email: "contact_email",
+      is_active: "is_active",
+      extraction_confidence_score: "extraction_confidence_score",
+      last_verified_at: "last_verified_at",
+    };
+
+    // Build index map from header positions to field names
+    const indexMap: { index: number; field: keyof SchoolScholarship }[] = [];
+    headers.forEach((h, i) => {
+      const field = CSV_TO_FIELD[h];
+      if (field) indexMap.push({ index: i, field });
+    });
+
+    const scholarships: SchoolScholarship[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      const obj: any = {
+        row: "", acara_id: "", school_name: "", suburb: "", postcode: "", state: "",
+        sector: "", school_sector: "", school_type: "", gender: "", website_url: "",
+        scholarship_url: "", scholarship_confidence: "not_found", url_status: "",
+        program_name: "", program_type: "", category: "", sub_type: "",
+        gender_eligibility: "", overview: "", description: "", eligibility_criteria: "",
+        year_levels: "", application_open_date: "", application_close_date: "",
+        closing_label: "", days_left: "", value_aud: "", value_num: "", value_type: "",
+        number_awarded: "", test_provider: "", test_month: "", application_fee: "",
+        special_conditions: "", contact_phone: "", contact_email: "", is_active: "",
+        extraction_confidence_score: "", last_verified_at: "",
+      };
+
+      for (const { index, field } of indexMap) {
+        if (index < values.length) {
+          const val = values[index];
+          if (field === "website_url" && val === "not_found") {
+            obj[field] = "";
+          } else {
+            obj[field] = val;
+          }
+        }
+      }
+
+      if (obj.school_name) {
+        scholarships.push(obj as SchoolScholarship);
+      }
+    }
+
+    console.log(`Loaded ${scholarships.length} scholarships from CSV`);
+    return scholarships;
+  } catch (err) {
+    console.error("Error loading scholarships from CSV:", err);
+    return [];
+  }
 }
 
 export function getConfidenceBadge(c: SchoolScholarship["scholarship_confidence"]): { label: string; color: string } {
