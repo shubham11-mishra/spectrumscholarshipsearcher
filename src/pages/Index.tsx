@@ -61,8 +61,8 @@ const Index = () => {
   const filtered = useMemo(() => {
     let data = schools.filter((s) => {
       if (s.scholarship_confidence === "not_found") return false;
-      // Personalized filter: only show user's interest categories
-      if (user && interests.length > 0 && showPersonalized) {
+      // Personalized filter: only apply when there's no active search query
+      if (user && interests.length > 0 && showPersonalized && !searchQuery.trim()) {
         if (!matchesInterestCategory(s.category, interests)) return false;
       }
       if (!matchesSearch(s, searchQuery)) return false;
