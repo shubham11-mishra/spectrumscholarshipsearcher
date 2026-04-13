@@ -50,18 +50,19 @@ const Auth = () => {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName } },
+          options: { data: { full_name: fullName, interests: selectedCategories } },
         });
         // Ignore email rate limit errors since auto-confirm is enabled
         if (error && !error.message.toLowerCase().includes("rate limit")) throw error;
 
         // Save interests
-        if (data?.user) {
+        if (data?.session?.user) {
           const inserts = selectedCategories.map((category) => ({
-            user_id: data.user!.id,
+            user_id: data.session.user.id,
             category,
           }));
-          await supabase.from("user_interests").insert(inserts);
+          const { error: interestsError } = await supabase.from("user_interests").insert(inserts);
+          if (interestsError) throw interestsError;
         }
         navigate("/");
       }
