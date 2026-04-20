@@ -246,7 +246,7 @@ const FilterCheckGroup = ({
   onToggle: (v: string) => void;
   options: string[];
 }) => (
-  <div>
+  <div className="mb-4">
     <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
       {label}
       {selected.length > 0 && (
