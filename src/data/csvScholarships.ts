@@ -43,31 +43,8 @@ export interface SchoolScholarship {
   last_verified_at: string;
 }
 
-export async function loadScholarshipsFromCSV(): Promise<SchoolScholarship[]> {
-  let allData: any[] = [];
-  let from = 0;
-  const pageSize = 1000;
-
-  while (true) {
-    const { data, error } = await supabase
-      .from("scholarships")
-      .select("*")
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      console.error("Error loading scholarships:", error);
-      break;
-    }
-
-    if (!data || data.length === 0) break;
-    allData = allData.concat(data);
-    if (data.length < pageSize) break;
-    from += pageSize;
-  }
-
-  console.log(`Loaded ${allData.length} scholarships from database`);
-
-  return allData.map((obj: any) => ({
+function mapRow(obj: any): SchoolScholarship {
+  return {
     row: String(obj.row_number || ""),
     acara_id: obj.acara_id || "",
     school_name: obj.school_name || "",
