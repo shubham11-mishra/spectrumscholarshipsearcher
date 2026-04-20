@@ -23,7 +23,6 @@ const Index = () => {
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [genderFilters, setGenderFilters] = useState<string[]>([]);
   const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [showPersonalized, setShowPersonalized] = useState(true);
 
   useEffect(() => {
