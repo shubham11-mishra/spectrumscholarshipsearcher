@@ -193,7 +193,7 @@ const Index = () => {
               </div>
             </div>
 
-            <FilterCheckGroup label="State" selected={stateFilters} onToggle={(v) => toggleInArray(v, stateFilters, setStateFilters)} options={filterOptions.states} />
+            <FilterCheckGroup label="State" selected={stateFilters} onToggle={(v) => toggleInArray(v, stateFilters, setStateFilters)} options={filterOptions.states} noScroll />
             <FilterCheckGroup label="School Sector" selected={sectorFilters} onToggle={(v) => toggleInArray(v, sectorFilters, setSectorFilters)} options={filterOptions.sectors} />
             <FilterCheckGroup label="Category" selected={categoryFilters} onToggle={(v) => toggleInArray(v, categoryFilters, setCategoryFilters)} options={filterOptions.categories} />
             <FilterCheckGroup label="Gender" selected={genderFilters} onToggle={(v) => toggleInArray(v, genderFilters, setGenderFilters)} options={filterOptions.genders} />
@@ -274,18 +274,20 @@ const FilterCheckGroup = ({
   selected,
   onToggle,
   options,
+  noScroll = false,
 }: {
   label: string;
   selected: string[];
   onToggle: (v: string) => void;
   options: string[];
+  noScroll?: boolean;
 }) => (
   <div className="mb-4">
     <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
       {label}
       {selected.length > 0 && <span className="ml-1.5 text-primary normal-case">({selected.length})</span>}
     </div>
-    <div className="max-h-44 overflow-y-auto pr-1 space-y-1 border border-border rounded-lg p-2 bg-card">
+    <div className={`${noScroll ? "" : "max-h-44 overflow-y-auto"} pr-1 space-y-1 border border-border rounded-lg p-2 bg-card`}>
       {options.length === 0 && <div className="text-[11px] text-muted-foreground italic">Loading…</div>}
       {options.map((o) => {
         const checked = selected.includes(o);
