@@ -58,20 +58,25 @@ const Index = () => {
     };
   }, [schools]);
 
+  const matchesAnyFilter = (value: string | undefined, selected: string[]) => {
+    if (selected.length === 0) return true;
+    const v = (value ?? "").trim().toLowerCase();
+    return selected.some((s) => s.trim().toLowerCase() === v);
+  };
+
   const filtered = useMemo(() => {
     let data = schools.filter((s) => {
       if (s.scholarship_confidence === "not_found") return false;
-      // Personalized filter: only apply when there's no active search query
       if (user && interests.length > 0 && showPersonalized && !searchQuery.trim()) {
         if (!matchesInterestCategory(s.category, interests)) return false;
       }
       if (!matchesSearch(s, searchQuery)) return false;
       if (confidenceFilter !== "all" && !matchesExactFilter(s.scholarship_confidence, confidenceFilter)) return false;
-      if (!matchesExactFilter(s.school_sector, sectorFilter)) return false;
-      if (!matchesExactFilter(s.state, stateFilter)) return false;
-      if (!matchesExactFilter(s.category, categoryFilter)) return false;
-      if (!matchesExactFilter(s.gender, genderFilter)) return false;
-      if (!matchesExactFilter(s.value_type, valueTypeFilter)) return false;
+      if (!matchesAnyFilter(s.school_sector, sectorFilters)) return false;
+      if (!matchesAnyFilter(s.state, stateFilters)) return false;
+      if (!matchesAnyFilter(s.category, categoryFilters)) return false;
+      if (!matchesAnyFilter(s.gender, genderFilters)) return false;
+      if (!matchesAnyFilter(s.value_type, valueTypeFilters)) return false;
       return true;
     });
 
@@ -86,7 +91,7 @@ const Index = () => {
       case "value": data.sort((a, b) => (parseInt(b.value_num) || 0) - (parseInt(a.value_num) || 0)); break;
     }
     return data;
-  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter, user, interests, showPersonalized]);
+  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters, user, interests, showPersonalized]);
 
   const counts = useMemo(() => {
     const visible = schools.filter((s) => s.scholarship_confidence !== "not_found");
@@ -97,16 +102,18 @@ const Index = () => {
     return c;
   }, [schools]);
 
-  const activeFiltersCount = [sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter].filter((f) => f !== "all").length;
+  const activeFiltersCount =
+    sectorFilters.length + stateFilters.length + categoryFilters.length + genderFilters.length + valueTypeFilters.length;
 
   const clearAllFilters = () => {
     setConfidenceFilter("all");
-    setSectorFilter("all");
-    setStateFilter("all");
-    setCategoryFilter("all");
-    setGenderFilter("all");
-    setValueTypeFilter("all");
+    setSectorFilters([]);
+    setStateFilters([]);
+    setCategoryFilters([]);
+    setGenderFilters([]);
+    setValueTypeFilters([]);
   };
+
 
   return (
     <div className="min-h-screen">
