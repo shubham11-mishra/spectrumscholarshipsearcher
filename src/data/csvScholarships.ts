@@ -173,15 +173,6 @@ export async function fetchFilterOptions(): Promise<{
   genders: string[];
   valueTypes: string[];
 }> {
-  const { data, error } = await supabase
-    .from("scholarships")
-    .select("state, school_sector, category, gender, value_type")
-    .neq("scholarship_confidence", "not_found")
-    .limit(20000);
-  if (error || !data) {
-    console.error("fetchFilterOptions error:", error);
-    return { states: [], sectors: [], categories: [], genders: [], valueTypes: [] };
-  }
   const sets = {
     states: new Set<string>(),
     sectors: new Set<string>(),
@@ -189,13 +180,34 @@ export async function fetchFilterOptions(): Promise<{
     genders: new Set<string>(),
     valueTypes: new Set<string>(),
   };
-  data.forEach((r: any) => {
-    if (r.state?.trim()) sets.states.add(r.state.trim());
-    if (r.school_sector?.trim()) sets.sectors.add(r.school_sector.trim());
-    if (r.category?.trim()) sets.categories.add(r.category.trim());
-    if (r.gender?.trim()) sets.genders.add(r.gender.trim());
-    if (r.value_type?.trim()) sets.valueTypes.add(r.value_type.trim());
-  });
+
+  let from = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("scholarships")
+      .select("state, school_sector, category, gender, value_type")
+      .neq("scholarship_confidence", "not_found")
+      .range(from, from + pageSize - 1);
+
+    if (error || !data) {
+      console.error("fetchFilterOptions error:", error);
+      break;
+    }
+
+    data.forEach((r: any) => {
+      if (r.state?.trim()) sets.states.add(r.state.trim());
+      if (r.school_sector?.trim()) sets.sectors.add(r.school_sector.trim());
+      if (r.category?.trim()) sets.categories.add(r.category.trim());
+      if (r.gender?.trim()) sets.genders.add(r.gender.trim());
+      if (r.value_type?.trim()) sets.valueTypes.add(r.value_type.trim());
+    });
+
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
   return {
     states: [...sets.states].sort(),
     sectors: [...sets.sectors].sort(),
