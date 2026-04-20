@@ -5,9 +5,10 @@ import { useShortlist } from "@/hooks/useShortlist";
 interface SchoolCardProps {
   school: SchoolScholarship;
   index: number;
+  onOpenDetail?: (s: SchoolScholarship) => void;
 }
 
-const SchoolCard = ({ school, index }: SchoolCardProps) => {
+const SchoolCard = ({ school, index, onOpenDetail }: SchoolCardProps) => {
   const badge = getConfidenceBadge(school.scholarship_confidence);
   const catColor = getCategoryColor(school.category);
   const hasLink = !!(school.scholarship_url || school.website_url);
@@ -18,8 +19,12 @@ const SchoolCard = ({ school, index }: SchoolCardProps) => {
 
   return (
     <div
-      className="card-shine glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:glow-primary relative animate-fade-up group flex flex-col"
+      className="card-shine glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:glow-primary relative animate-fade-up group flex flex-col cursor-pointer"
       style={{ animationDelay: `${index * 0.03}s` }}
+      onClick={() => onOpenDetail?.(school)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenDetail?.(school); } }}
     >
       <div className="h-0.5 bg-gradient-to-r from-primary to-accent" />
       <div className="p-4 flex flex-col flex-1">
