@@ -5,7 +5,7 @@ import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
 import { SchoolScholarship, loadScholarshipsFromCSV } from "@/data/csvScholarships";
 import { matchesExactFilter, matchesInterestCategory, matchesSearch } from "@/lib/scholarshipFilters";
-import { Filter, X, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 type SortOption = "name" | "suburb" | "confidence" | "value";
