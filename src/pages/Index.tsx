@@ -263,6 +263,7 @@ const Index = () => {
           </div>
         </div>
       </div>
+      <SchoolDetailModal school={selected} onClose={() => setSelected(null)} />
     </div>
   );
 };
