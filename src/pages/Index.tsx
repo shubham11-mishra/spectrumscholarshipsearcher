@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
+import SchoolDetailModal from "@/components/SchoolDetailModal";
 import {
   SchoolScholarship,
   fetchScholarshipsPage,
@@ -51,6 +52,7 @@ const Index = () => {
   const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
   const [showPersonalized, setShowPersonalized] = useState(true);
   const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<SchoolScholarship | null>(null);
 
   const [filterOptions, setFilterOptions] = useState({
     states: [] as string[],
@@ -232,7 +234,7 @@ const Index = () => {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {rows.map((s, i) => (
-                    <SchoolCard key={`${s.acara_id}-${s.row}-${i}`} school={s} index={i} />
+                    <SchoolCard key={`${s.acara_id}-${s.row}-${i}`} school={s} index={i} onOpenDetail={setSelected} />
                   ))}
                 </div>
 
@@ -261,6 +263,7 @@ const Index = () => {
           </div>
         </div>
       </div>
+      <SchoolDetailModal school={selected} onClose={() => setSelected(null)} />
     </div>
   );
 };
