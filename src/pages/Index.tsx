@@ -18,11 +18,11 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
-  const [sectorFilter, setSectorFilter] = useState("all");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all");
-  const [valueTypeFilter, setValueTypeFilter] = useState("all");
+  const [sectorFilters, setSectorFilters] = useState<string[]>([]);
+  const [stateFilters, setStateFilters] = useState<string[]>([]);
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [genderFilters, setGenderFilters] = useState<string[]>([]);
+  const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showPersonalized, setShowPersonalized] = useState(true);
 
@@ -58,20 +58,25 @@ const Index = () => {
     };
   }, [schools]);
 
+  const matchesAnyFilter = (value: string | undefined, selected: string[]) => {
+    if (selected.length === 0) return true;
+    const v = (value ?? "").trim().toLowerCase();
+    return selected.some((s) => s.trim().toLowerCase() === v);
+  };
+
   const filtered = useMemo(() => {
     let data = schools.filter((s) => {
       if (s.scholarship_confidence === "not_found") return false;
-      // Personalized filter: only apply when there's no active search query
       if (user && interests.length > 0 && showPersonalized && !searchQuery.trim()) {
         if (!matchesInterestCategory(s.category, interests)) return false;
       }
       if (!matchesSearch(s, searchQuery)) return false;
       if (confidenceFilter !== "all" && !matchesExactFilter(s.scholarship_confidence, confidenceFilter)) return false;
-      if (!matchesExactFilter(s.school_sector, sectorFilter)) return false;
-      if (!matchesExactFilter(s.state, stateFilter)) return false;
-      if (!matchesExactFilter(s.category, categoryFilter)) return false;
-      if (!matchesExactFilter(s.gender, genderFilter)) return false;
-      if (!matchesExactFilter(s.value_type, valueTypeFilter)) return false;
+      if (!matchesAnyFilter(s.school_sector, sectorFilters)) return false;
+      if (!matchesAnyFilter(s.state, stateFilters)) return false;
+      if (!matchesAnyFilter(s.category, categoryFilters)) return false;
+      if (!matchesAnyFilter(s.gender, genderFilters)) return false;
+      if (!matchesAnyFilter(s.value_type, valueTypeFilters)) return false;
       return true;
     });
 
@@ -86,7 +91,7 @@ const Index = () => {
       case "value": data.sort((a, b) => (parseInt(b.value_num) || 0) - (parseInt(a.value_num) || 0)); break;
     }
     return data;
-  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter, user, interests, showPersonalized]);
+  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters, user, interests, showPersonalized]);
 
   const counts = useMemo(() => {
     const visible = schools.filter((s) => s.scholarship_confidence !== "not_found");
@@ -97,16 +102,18 @@ const Index = () => {
     return c;
   }, [schools]);
 
-  const activeFiltersCount = [sectorFilter, stateFilter, categoryFilter, genderFilter, valueTypeFilter].filter((f) => f !== "all").length;
+  const activeFiltersCount =
+    sectorFilters.length + stateFilters.length + categoryFilters.length + genderFilters.length + valueTypeFilters.length;
 
   const clearAllFilters = () => {
     setConfidenceFilter("all");
-    setSectorFilter("all");
-    setStateFilter("all");
-    setCategoryFilter("all");
-    setGenderFilter("all");
-    setValueTypeFilter("all");
+    setSectorFilters([]);
+    setStateFilters([]);
+    setCategoryFilters([]);
+    setGenderFilters([]);
+    setValueTypeFilters([]);
   };
+
 
   return (
     <div className="min-h-screen">
@@ -197,12 +204,12 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <FilterSelect label="State" value={stateFilter} onChange={setStateFilter} options={filterOptions.states} />
-              <FilterSelect label="Sector" value={sectorFilter} onChange={setSectorFilter} options={filterOptions.sectors} />
-              <FilterSelect label="Category" value={categoryFilter} onChange={setCategoryFilter} options={filterOptions.categories} />
-              <FilterSelect label="Gender" value={genderFilter} onChange={setGenderFilter} options={filterOptions.genders} />
-              <FilterSelect label="Value Type" value={valueTypeFilter} onChange={setValueTypeFilter} options={filterOptions.valueTypes} />
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <FilterCheckGroup label="State" selected={stateFilters} onToggle={(v) => toggleInArray(v, stateFilters, setStateFilters)} options={filterOptions.states} />
+              <FilterCheckGroup label="Sector" selected={sectorFilters} onToggle={(v) => toggleInArray(v, sectorFilters, setSectorFilters)} options={filterOptions.sectors} />
+              <FilterCheckGroup label="Category" selected={categoryFilters} onToggle={(v) => toggleInArray(v, categoryFilters, setCategoryFilters)} options={filterOptions.categories} />
+              <FilterCheckGroup label="Gender" selected={genderFilters} onToggle={(v) => toggleInArray(v, genderFilters, setGenderFilters)} options={filterOptions.genders} />
+              <FilterCheckGroup label="Value Type" selected={valueTypeFilters} onToggle={(v) => toggleInArray(v, valueTypeFilters, setValueTypeFilters)} options={filterOptions.valueTypes} />
             </div>
           </div>
         </div>
@@ -250,19 +257,52 @@ const Index = () => {
   );
 };
 
-const FilterSelect = ({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) => (
+const toggleInArray = (value: string, current: string[], setter: (v: string[]) => void) => {
+  setter(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+};
+
+const FilterCheckGroup = ({
+  label,
+  selected,
+  onToggle,
+  options,
+}: {
+  label: string;
+  selected: string[];
+  onToggle: (v: string) => void;
+  options: string[];
+}) => (
   <div>
-    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{label}</div>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full border border-border rounded-lg px-2.5 py-1.5 text-[12px] text-foreground bg-card cursor-pointer outline-none"
-    >
-      <option value="all">All</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
+    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+      {label}
+      {selected.length > 0 && (
+        <span className="ml-1.5 text-primary normal-case">({selected.length})</span>
+      )}
+    </div>
+    <div className="max-h-44 overflow-y-auto pr-1 space-y-1 border border-border rounded-lg p-2 bg-card">
+      {options.length === 0 && (
+        <div className="text-[11px] text-muted-foreground italic">No options</div>
+      )}
+      {options.map((o) => {
+        const checked = selected.includes(o);
+        return (
+          <label
+            key={o}
+            className={`flex items-center gap-2 px-1.5 py-1 rounded-md text-[12px] cursor-pointer transition-colors ${
+              checked ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={() => onToggle(o)}
+              className="w-3.5 h-3.5 accent-primary cursor-pointer rounded"
+            />
+            <span className="truncate">{o}</span>
+          </label>
+        );
+      })}
+    </div>
   </div>
 );
 
