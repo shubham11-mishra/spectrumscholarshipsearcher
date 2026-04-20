@@ -3,19 +3,45 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
-import { SchoolScholarship, loadScholarshipsFromCSV } from "@/data/csvScholarships";
-import { matchesExactFilter, matchesInterestCategory, matchesSearch } from "@/lib/scholarshipFilters";
-import { Sparkles } from "lucide-react";
+import {
+  SchoolScholarship,
+  fetchScholarshipsPage,
+  fetchFilterOptions,
+  fetchConfidenceCounts,
+} from "@/data/csvScholarships";
+import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 type SortOption = "name" | "suburb" | "confidence" | "value";
 type ConfidenceFilter = "all" | "high" | "medium" | "low";
 
+const PAGE_SIZE = 50;
+
+// Expand a user interest into the actual category values stored in DB
+const INTEREST_TO_CATEGORIES: Record<string, string[]> = {
+  academic: ["Academic"],
+  music: ["Music", "Performing Arts"],
+  sport: ["Sport", "Sports"],
+  general: ["General", "All Rounder", "Financial Need", "Leadership", "Cultural"],
+};
+
+const expandInterests = (interests: string[]): string[] => {
+  const out = new Set<string>();
+  interests.forEach((i) => {
+    const key = i.trim().toLowerCase();
+    (INTEREST_TO_CATEGORIES[key] ?? [i]).forEach((c) => out.add(c));
+  });
+  return [...out];
+};
+
 const Index = () => {
   const { user, interests } = useAuth();
-  const [schools, setSchools] = useState<SchoolScholarship[]>([]);
+  const [rows, setRows] = useState<SchoolScholarship[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // debounced
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
   const [sectorFilters, setSectorFilters] = useState<string[]>([]);
@@ -24,82 +50,73 @@ const Index = () => {
   const [genderFilters, setGenderFilters] = useState<string[]>([]);
   const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
   const [showPersonalized, setShowPersonalized] = useState(true);
+  const [page, setPage] = useState(0);
 
+  const [filterOptions, setFilterOptions] = useState({
+    states: [] as string[],
+    sectors: [] as string[],
+    categories: [] as string[],
+    genders: [] as string[],
+    valueTypes: [] as string[],
+  });
+  const [counts, setCounts] = useState({ all: 0, high: 0, medium: 0, low: 0 });
+
+  // One-time: load filter options + counts
   useEffect(() => {
-    loadScholarshipsFromCSV().then((data) => {
-      setSchools(data);
-      setLoading(false);
-    });
+    fetchFilterOptions().then(setFilterOptions);
+    fetchConfidenceCounts().then(setCounts);
   }, []);
 
-  const handleSearch = () => setSearchQuery((prev) => prev.trim());
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
-  // Derive unique filter options from data
-  const filterOptions = useMemo(() => {
-    const states = new Set<string>();
-    const categories = new Set<string>();
-    const genders = new Set<string>();
-    const valueTypes = new Set<string>();
-    const sectors = new Set<string>();
-    schools.forEach((s) => {
-      if (s.state?.trim()) states.add(s.state.trim());
-      if (s.category?.trim()) categories.add(s.category.trim());
-      if (s.gender?.trim()) genders.add(s.gender.trim());
-      if (s.value_type?.trim()) valueTypes.add(s.value_type.trim());
-      if (s.school_sector?.trim()) sectors.add(s.school_sector.trim());
+  // Reset to page 0 whenever any filter/search changes
+  useEffect(() => {
+    setPage(0);
+  }, [
+    searchQuery, sortBy, confidenceFilter,
+    sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters,
+    showPersonalized,
+  ]);
+
+  const interestCategories = useMemo(() => {
+    if (!user || interests.length === 0 || !showPersonalized || searchQuery) return undefined;
+    return expandInterests(interests);
+  }, [user, interests, showPersonalized, searchQuery]);
+
+  // Fetch data when filters/search/sort/page change
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchScholarshipsPage({
+      search: searchQuery,
+      confidence: confidenceFilter,
+      states: stateFilters,
+      sectors: sectorFilters,
+      categories: categoryFilters,
+      genders: genderFilters,
+      valueTypes: valueTypeFilters,
+      interestCategories,
+      sortBy,
+      page,
+      pageSize: PAGE_SIZE,
+    }).then((res) => {
+      if (cancelled) return;
+      setRows(res.rows);
+      setTotal(res.total);
+      setLoading(false);
     });
-    return {
-      states: Array.from(states).sort(),
-      categories: Array.from(categories).sort(),
-      genders: Array.from(genders).sort(),
-      valueTypes: Array.from(valueTypes).sort(),
-      sectors: Array.from(sectors).sort(),
-    };
-  }, [schools]);
+    return () => { cancelled = true; };
+  }, [
+    searchQuery, sortBy, confidenceFilter, page,
+    sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters,
+    interestCategories,
+  ]);
 
-  const matchesAnyFilter = (value: string | undefined, selected: string[]) => {
-    if (selected.length === 0) return true;
-    const v = (value ?? "").trim().toLowerCase();
-    return selected.some((s) => s.trim().toLowerCase() === v);
-  };
-
-  const filtered = useMemo(() => {
-    let data = schools.filter((s) => {
-      if (s.scholarship_confidence === "not_found") return false;
-      if (user && interests.length > 0 && showPersonalized && !searchQuery.trim()) {
-        if (!matchesInterestCategory(s.category, interests)) return false;
-      }
-      if (!matchesSearch(s, searchQuery)) return false;
-      if (confidenceFilter !== "all" && !matchesExactFilter(s.scholarship_confidence, confidenceFilter)) return false;
-      if (!matchesAnyFilter(s.school_sector, sectorFilters)) return false;
-      if (!matchesAnyFilter(s.state, stateFilters)) return false;
-      if (!matchesAnyFilter(s.category, categoryFilters)) return false;
-      if (!matchesAnyFilter(s.gender, genderFilters)) return false;
-      if (!matchesAnyFilter(s.value_type, valueTypeFilters)) return false;
-      return true;
-    });
-
-    switch (sortBy) {
-      case "name": data.sort((a, b) => a.school_name.localeCompare(b.school_name)); break;
-      case "suburb": data.sort((a, b) => a.suburb.localeCompare(b.suburb)); break;
-      case "confidence": {
-        const order = { high: 0, medium: 1, low: 2, not_found: 3 };
-        data.sort((a, b) => order[a.scholarship_confidence] - order[b.scholarship_confidence]);
-        break;
-      }
-      case "value": data.sort((a, b) => (parseInt(b.value_num) || 0) - (parseInt(a.value_num) || 0)); break;
-    }
-    return data;
-  }, [schools, searchQuery, sortBy, confidenceFilter, sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters, user, interests, showPersonalized]);
-
-  const counts = useMemo(() => {
-    const visible = schools.filter((s) => s.scholarship_confidence !== "not_found");
-    const c = { all: visible.length, high: 0, medium: 0, low: 0 };
-    visible.forEach((s) => {
-      if (s.scholarship_confidence in c) c[s.scholarship_confidence as keyof typeof c]++;
-    });
-    return c;
-  }, [schools]);
+  const handleSearch = () => setSearchQuery(searchInput.trim());
 
   const activeFiltersCount =
     sectorFilters.length + stateFilters.length + categoryFilters.length + genderFilters.length + valueTypeFilters.length;
@@ -113,31 +130,29 @@ const Index = () => {
     setValueTypeFilters([]);
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div className="min-h-screen">
       <Navbar />
-      <HeroSection searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearch={handleSearch} />
+      <HeroSection searchQuery={searchInput} onSearchChange={setSearchInput} onSearch={handleSearch} />
 
       {user && interests.length === 0 && <InterestSetupBanner />}
 
-      {/* Personalized banner */}
       {user && interests.length > 0 && (
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 pb-3 animate-fade-up">
           <div className="glass rounded-xl px-4 py-2.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm">
               <Sparkles className="w-4 h-4 text-primary shrink-0" />
               <span className="text-muted-foreground">
-                Showing scholarships matching your interests: {" "}
+                Showing scholarships matching your interests:{" "}
                 <span className="text-foreground font-semibold">{interests.join(", ")}</span>
               </span>
             </div>
             <button
               onClick={() => setShowPersonalized(!showPersonalized)}
               className={`text-xs font-medium px-3 py-1 rounded-lg cursor-pointer border-none transition-all ${
-                showPersonalized
-                  ? "bg-primary/15 text-primary"
-                  : "bg-secondary text-muted-foreground"
+                showPersonalized ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"
               }`}
             >
               {showPersonalized ? "Show All" : "My Interests"}
@@ -145,10 +160,9 @@ const Index = () => {
           </div>
         </div>
       )}
-      {/* Main layout: sidebar + content */}
+
       <div className="max-w-[1280px] mx-auto px-4 md:px-8 pb-20 animate-fade-up" style={{ animationDelay: "0.1s" }}>
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-          {/* Sidebar */}
           <aside className="md:sticky md:top-20 md:self-start glass rounded-2xl p-4 h-fit">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">Filters</span>
@@ -159,7 +173,6 @@ const Index = () => {
               )}
             </div>
 
-            {/* Confidence */}
             <div className="mb-4">
               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Confidence</div>
               <div className="flex flex-wrap gap-1.5">
@@ -187,12 +200,10 @@ const Index = () => {
             <FilterCheckGroup label="Value Type" selected={valueTypeFilters} onToggle={(v) => toggleInArray(v, valueTypeFilters, setValueTypeFilters)} options={filterOptions.valueTypes} />
           </aside>
 
-          {/* Content */}
           <div>
-            {/* Toolbar */}
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2.5">
               <div className="text-sm text-muted-foreground">
-                Showing <strong className="text-foreground font-bold">{filtered.length}</strong> scholarships
+                Showing <strong className="text-foreground font-bold">{total.toLocaleString()}</strong> scholarships
               </div>
               <select
                 value={sortBy}
@@ -211,18 +222,41 @@ const Index = () => {
                 <div className="text-5xl mb-4 animate-spin">⏳</div>
                 <h3 className="font-display text-xl mb-2">Loading scholarships...</h3>
               </div>
-            ) : filtered.length === 0 ? (
+            ) : rows.length === 0 ? (
               <div className="text-center py-16">
                 <div className="text-5xl mb-4">🔍</div>
                 <h3 className="font-display text-xl mb-2">No scholarships found</h3>
                 <p className="text-muted-foreground text-sm">Try adjusting your filters or search term.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filtered.map((s, i) => (
-                  <SchoolCard key={`${s.acara_id}-${s.row}`} school={s} index={i} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {rows.map((s, i) => (
+                    <SchoolCard key={`${s.acara_id}-${s.row}-${i}`} school={s} index={i} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-8 flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border text-sm bg-card disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Prev
+                  </button>
+                  <span className="text-sm text-muted-foreground">
+                    Page <strong className="text-foreground">{page + 1}</strong> of {totalPages.toLocaleString()}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={page >= totalPages - 1}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border text-sm bg-card disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    Next <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -249,14 +283,10 @@ const FilterCheckGroup = ({
   <div className="mb-4">
     <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
       {label}
-      {selected.length > 0 && (
-        <span className="ml-1.5 text-primary normal-case">({selected.length})</span>
-      )}
+      {selected.length > 0 && <span className="ml-1.5 text-primary normal-case">({selected.length})</span>}
     </div>
     <div className="max-h-44 overflow-y-auto pr-1 space-y-1 border border-border rounded-lg p-2 bg-card">
-      {options.length === 0 && (
-        <div className="text-[11px] text-muted-foreground italic">No options</div>
-      )}
+      {options.length === 0 && <div className="text-[11px] text-muted-foreground italic">Loading…</div>}
       {options.map((o) => {
         const checked = selected.includes(o);
         return (

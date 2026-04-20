@@ -1,26 +1,28 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import SchoolCard from "@/components/SchoolCard";
-import { SchoolScholarship, loadScholarshipsFromCSV } from "@/data/csvScholarships";
+import { SchoolScholarship, fetchScholarshipsByIds } from "@/data/csvScholarships";
 import { useShortlist } from "@/hooks/useShortlist";
 import { Heart } from "lucide-react";
 
 const Shortlist = () => {
   const { shortlisted } = useShortlist();
-  const [schools, setSchools] = useState<SchoolScholarship[]>([]);
+  const [filtered, setFiltered] = useState<SchoolScholarship[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadScholarshipsFromCSV().then((data) => {
-      setSchools(data);
+    const ids = Array.from(shortlisted);
+    if (ids.length === 0) {
+      setFiltered([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    fetchScholarshipsByIds(ids).then((data) => {
+      setFiltered(data);
       setLoading(false);
     });
-  }, []);
-
-  const filtered = useMemo(
-    () => schools.filter((s) => shortlisted.has(`${s.acara_id}-${s.row}`)),
-    [schools, shortlisted]
-  );
+  }, [shortlisted]);
 
   return (
     <div className="min-h-screen">
