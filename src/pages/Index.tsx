@@ -257,19 +257,52 @@ const Index = () => {
   );
 };
 
-const FilterSelect = ({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) => (
+const toggleInArray = (value: string, current: string[], setter: (v: string[]) => void) => {
+  setter(current.includes(value) ? current.filter((v) => v !== value) : [...current, value]);
+};
+
+const FilterCheckGroup = ({
+  label,
+  selected,
+  onToggle,
+  options,
+}: {
+  label: string;
+  selected: string[];
+  onToggle: (v: string) => void;
+  options: string[];
+}) => (
   <div>
-    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">{label}</div>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full border border-border rounded-lg px-2.5 py-1.5 text-[12px] text-foreground bg-card cursor-pointer outline-none"
-    >
-      <option value="all">All</option>
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
+    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+      {label}
+      {selected.length > 0 && (
+        <span className="ml-1.5 text-primary normal-case">({selected.length})</span>
+      )}
+    </div>
+    <div className="max-h-44 overflow-y-auto pr-1 space-y-1 border border-border rounded-lg p-2 bg-card">
+      {options.length === 0 && (
+        <div className="text-[11px] text-muted-foreground italic">No options</div>
+      )}
+      {options.map((o) => {
+        const checked = selected.includes(o);
+        return (
+          <label
+            key={o}
+            className={`flex items-center gap-2 px-1.5 py-1 rounded-md text-[12px] cursor-pointer transition-colors ${
+              checked ? "bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={() => onToggle(o)}
+              className="w-3.5 h-3.5 accent-primary cursor-pointer rounded"
+            />
+            <span className="truncate">{o}</span>
+          </label>
+        );
+      })}
+    </div>
   </div>
 );
 
