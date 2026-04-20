@@ -100,23 +100,20 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Determine origin to fetch CSVs from public/data/
-    const body = await req.json().catch(() => ({}));
-    const baseUrl: string = body.baseUrl || "https://spectrumscholarshipsearcher.lovable.app";
+    console.log("Importing CSVs from bundled function data/");
 
-    console.log(`Importing CSVs from ${baseUrl}/data/`);
-
-    // 1. Fetch + parse all CSVs
+    // 1. Read + parse all CSVs from the function's own data/ folder
     const allRecords: Record<string, any>[] = [];
     const perFileCounts: Record<string, number> = {};
     for (const file of STATE_FILES) {
-      const url = `${baseUrl}/data/${file}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        console.error(`Failed to fetch ${url}: ${res.status}`);
+      const fileUrl = new URL(`./data/${file}`, import.meta.url);
+      let text: string;
+      try {
+        text = await Deno.readTextFile(fileUrl);
+      } catch (e) {
+        console.error(`Failed to read ${file}:`, e);
         continue;
       }
-      const text = await res.text();
       const records = csvToRecords(text);
       perFileCounts[file] = records.length;
       allRecords.push(...records);
