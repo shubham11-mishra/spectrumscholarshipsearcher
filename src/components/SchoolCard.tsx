@@ -108,9 +108,18 @@ const SchoolCard = ({ school, index, onOpenDetail }: SchoolCardProps) => {
 
         {/* Overview */}
         {school.overview && (
-          <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 line-clamp-2 flex-1">
-            {school.overview}
-          </p>
+          <div className="mb-3 flex-1">
+            <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2">
+              {school.overview}
+            </p>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenDetail?.(school); }}
+              className="text-[11px] font-semibold text-primary hover:underline mt-1 bg-transparent border-none cursor-pointer p-0"
+            >
+              Read more →
+            </button>
+          </div>
         )}
 
         {/* Test provider */}
