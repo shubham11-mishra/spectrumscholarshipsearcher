@@ -18,11 +18,11 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("name");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
-  const [sectorFilter, setSectorFilter] = useState("all");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all");
-  const [valueTypeFilter, setValueTypeFilter] = useState("all");
+  const [sectorFilters, setSectorFilters] = useState<string[]>([]);
+  const [stateFilters, setStateFilters] = useState<string[]>([]);
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [genderFilters, setGenderFilters] = useState<string[]>([]);
+  const [valueTypeFilters, setValueTypeFilters] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [showPersonalized, setShowPersonalized] = useState(true);
 
