@@ -204,12 +204,12 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <FilterSelect label="State" value={stateFilter} onChange={setStateFilter} options={filterOptions.states} />
-              <FilterSelect label="Sector" value={sectorFilter} onChange={setSectorFilter} options={filterOptions.sectors} />
-              <FilterSelect label="Category" value={categoryFilter} onChange={setCategoryFilter} options={filterOptions.categories} />
-              <FilterSelect label="Gender" value={genderFilter} onChange={setGenderFilter} options={filterOptions.genders} />
-              <FilterSelect label="Value Type" value={valueTypeFilter} onChange={setValueTypeFilter} options={filterOptions.valueTypes} />
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <FilterCheckGroup label="State" selected={stateFilters} onToggle={(v) => toggleInArray(v, stateFilters, setStateFilters)} options={filterOptions.states} />
+              <FilterCheckGroup label="Sector" selected={sectorFilters} onToggle={(v) => toggleInArray(v, sectorFilters, setSectorFilters)} options={filterOptions.sectors} />
+              <FilterCheckGroup label="Category" selected={categoryFilters} onToggle={(v) => toggleInArray(v, categoryFilters, setCategoryFilters)} options={filterOptions.categories} />
+              <FilterCheckGroup label="Gender" selected={genderFilters} onToggle={(v) => toggleInArray(v, genderFilters, setGenderFilters)} options={filterOptions.genders} />
+              <FilterCheckGroup label="Value Type" selected={valueTypeFilters} onToggle={(v) => toggleInArray(v, valueTypeFilters, setValueTypeFilters)} options={filterOptions.valueTypes} />
             </div>
           </div>
         </div>
