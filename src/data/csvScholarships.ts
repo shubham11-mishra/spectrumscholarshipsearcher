@@ -115,7 +115,7 @@ function applyFilters(query: any, q: ScholarshipQuery) {
     query = query.neq("scholarship_confidence", "not_found");
   }
   if (q.states?.length) query = query.in("state", q.states);
-  if (q.sectors?.length) query = query.in("school_sector", q.sectors);
+  if (q.sectors?.length) query = query.in("sector", q.sectors);
   if (q.categories?.length) query = query.in("category", q.categories);
   if (q.genders?.length) query = query.in("gender", q.genders);
   if (q.valueTypes?.length) query = query.in("value_type", q.valueTypes);
