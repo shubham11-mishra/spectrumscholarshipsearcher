@@ -120,7 +120,7 @@ const Index = () => {
       confidence: confidenceFilter,
       states: stateFilters,
       sectors: sectorFilters,
-      categories: categoryFilters,
+      categories: expandCategoryBuckets(categoryFilters),
       genders: genderFilters,
       valueTypes: valueTypeFilters,
       interestCategories,
