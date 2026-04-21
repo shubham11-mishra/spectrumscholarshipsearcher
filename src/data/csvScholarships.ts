@@ -115,7 +115,7 @@ function applyFilters(query: any, q: ScholarshipQuery) {
     query = query.neq("scholarship_confidence", "not_found");
   }
   if (q.states?.length) query = query.in("state", q.states);
-  if (q.sectors?.length) query = query.in("school_sector", q.sectors);
+  if (q.sectors?.length) query = query.in("sector", q.sectors);
   if (q.categories?.length) query = query.in("category", q.categories);
   if (q.genders?.length) query = query.in("gender", q.genders);
   if (q.valueTypes?.length) query = query.in("value_type", q.valueTypes);
@@ -201,7 +201,7 @@ export async function fetchFilterOptions(): Promise<{
   while (true) {
     const { data, error } = await supabase
       .from("scholarships")
-      .select("state, school_sector, category, gender, value_type")
+      .select("state, sector, category, gender, value_type")
       .neq("scholarship_confidence", "not_found")
       .range(from, from + pageSize - 1);
 
@@ -212,7 +212,7 @@ export async function fetchFilterOptions(): Promise<{
 
     data.forEach((r: any) => {
       if (r.state?.trim()) sets.states.add(r.state.trim());
-      if (r.school_sector?.trim()) sets.sectors.add(r.school_sector.trim());
+      if (r.sector?.trim()) sets.sectors.add(r.sector.trim());
       if (r.category?.trim()) sets.categories.add(r.category.trim());
       if (r.gender?.trim()) sets.genders.add(r.gender.trim());
       if (r.value_type?.trim()) sets.valueTypes.add(r.value_type.trim());
