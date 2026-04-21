@@ -214,7 +214,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="max-w-[1280px] mx-auto px-4 md:px-8 pb-20 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+      <div id="results-grid" className="max-w-[1280px] mx-auto px-4 md:px-8 pb-20 animate-fade-up" style={{ animationDelay: "0.1s" }}>
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
           <aside className="md:sticky md:top-20 md:self-start glass rounded-2xl p-4 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
