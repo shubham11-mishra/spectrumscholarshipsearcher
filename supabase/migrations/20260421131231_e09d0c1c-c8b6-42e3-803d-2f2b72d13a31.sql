@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.idx_scholarships_value_num_int;
