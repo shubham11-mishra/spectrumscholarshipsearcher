@@ -4,11 +4,13 @@ import HeroSection from "@/components/HeroSection";
 import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
+import CategoryQuickLinks from "@/components/CategoryQuickLinks";
 import {
   SchoolScholarship,
   fetchScholarshipsPage,
   fetchFilterOptions,
   fetchConfidenceCounts,
+  fetchCategoryCounts,
 } from "@/data/csvScholarships";
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,11 +86,13 @@ const Index = () => {
     valueTypes: [] as string[],
   });
   const [counts, setCounts] = useState({ all: 0, high: 0, medium: 0, low: 0 });
+  const [rawCategoryCounts, setRawCategoryCounts] = useState<Record<string, number>>({});
 
   // One-time: load filter options + counts
   useEffect(() => {
     fetchFilterOptions().then(setFilterOptions);
     fetchConfidenceCounts().then(setCounts);
+    fetchCategoryCounts().then(setRawCategoryCounts);
   }, []);
 
   // Debounce search input
@@ -156,12 +160,37 @@ const Index = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // Sum raw category counts into the curated buckets shown on the quick-links
+  const bucketCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    CATEGORY_BUCKETS.forEach((b) => {
+      out[b.label] = b.values.reduce((sum, v) => sum + (rawCategoryCounts[v] ?? 0), 0);
+    });
+    return out;
+  }, [rawCategoryCounts]);
+
+  const toggleCategoryBucket = (label: string) => {
+    setCategoryFilters((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+    // Smooth-scroll to the results so users see the filter take effect
+    requestAnimationFrame(() => {
+      document.getElementById("results-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <HeroSection searchQuery={searchInput} onSearchChange={setSearchInput} onSearch={handleSearch} />
 
       {user && interests.length === 0 && <InterestSetupBanner />}
+
+      <CategoryQuickLinks
+        active={categoryFilters}
+        counts={bucketCounts}
+        onSelect={toggleCategoryBucket}
+      />
 
       {user && interests.length > 0 && (
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 pb-3 animate-fade-up">
@@ -185,7 +214,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="max-w-[1280px] mx-auto px-4 md:px-8 pb-20 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+      <div id="results-grid" className="max-w-[1280px] mx-auto px-4 md:px-8 pb-20 animate-fade-up" style={{ animationDelay: "0.1s" }}>
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
           <aside className="md:sticky md:top-20 md:self-start glass rounded-2xl p-4 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
