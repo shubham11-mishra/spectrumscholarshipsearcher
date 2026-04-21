@@ -15,7 +15,7 @@ import {
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-type SortOption = "name" | "suburb" | "confidence" | "value";
+type SortOption = "closing" | "name" | "suburb" | "confidence" | "value";
 type ConfidenceFilter = "all" | "high" | "medium" | "low";
 
 const PAGE_SIZE = 50;
