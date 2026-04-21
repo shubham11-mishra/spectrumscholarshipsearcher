@@ -97,7 +97,7 @@ export interface ScholarshipQuery {
   genders?: string[];
   valueTypes?: string[];
   interestCategories?: string[]; // ORs across these (uses category aliases handled client-side via expansion before passing in)
-  sortBy?: "name" | "suburb" | "confidence" | "value";
+  sortBy?: "closing" | "name" | "suburb" | "confidence" | "value";
   page?: number;
   pageSize?: number;
 }
@@ -153,7 +153,12 @@ export async function fetchScholarshipsPage(q: ScholarshipQuery): Promise<Schola
   let req = supabase.from("scholarships").select("*", { count: "exact" });
   req = applyFilters(req, q);
 
-  switch (q.sortBy ?? "name") {
+  switch (q.sortBy ?? "closing") {
+    case "closing":
+      // Soonest closing date first; rows without a date sort last.
+      req = req.order("application_close_date", { ascending: true, nullsFirst: false })
+               .order("school_name", { ascending: true });
+      break;
     case "name":
       req = req.order("school_name", { ascending: true });
       break;

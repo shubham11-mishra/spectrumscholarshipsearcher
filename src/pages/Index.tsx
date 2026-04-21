@@ -15,7 +15,7 @@ import {
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-type SortOption = "name" | "suburb" | "confidence" | "value";
+type SortOption = "closing" | "name" | "suburb" | "confidence" | "value";
 type ConfidenceFilter = "all" | "high" | "medium" | "low";
 
 const PAGE_SIZE = 50;
@@ -67,7 +67,7 @@ const Index = () => {
 
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // debounced
-  const [sortBy, setSortBy] = useState<SortOption>("name");
+  const [sortBy, setSortBy] = useState<SortOption>("closing");
   const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("all");
   const [sectorFilters, setSectorFilters] = useState<string[]>([]);
   const [stateFilters, setStateFilters] = useState<string[]>([]);
@@ -258,16 +258,23 @@ const Index = () => {
               <div className="text-sm text-muted-foreground">
                 Showing <strong className="text-foreground font-bold">{total.toLocaleString()}</strong> scholarships
               </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-muted-foreground bg-card cursor-pointer outline-none"
-              >
-                <option value="name">Name A–Z</option>
-                <option value="suburb">Suburb A–Z</option>
-                <option value="confidence">Confidence Level</option>
-                <option value="value">Highest Value</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <label htmlFor="sort-by" className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
+                  Sort
+                </label>
+                <select
+                  id="sort-by"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-foreground bg-card cursor-pointer outline-none hover:border-primary/50 transition-colors"
+                >
+                  <option value="closing">Closing Date (Soonest)</option>
+                  <option value="value">Highest Value</option>
+                  <option value="name">Name A–Z</option>
+                  <option value="suburb">Suburb A–Z</option>
+                  <option value="confidence">Confidence Level</option>
+                </select>
+              </div>
             </div>
 
             {loading ? (
