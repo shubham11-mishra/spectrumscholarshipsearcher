@@ -21,9 +21,12 @@ interface Props {
 }
 
 const CategoryQuickLinks = ({ active, counts, onSelect }: Props) => (
-  <section className="max-w-[1280px] mx-auto px-4 md:px-8 pb-6 animate-fade-up" style={{ animationDelay: "0.05s" }}>
-    <div className="text-[11px] font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">
-      Browse by Category
+  <section className="max-w-[1280px] mx-auto px-4 md:px-8 pt-2 pb-8 animate-fade-up" style={{ animationDelay: "0.05s" }}>
+    <div className="flex items-baseline justify-between mb-4">
+      <h2 className="text-base md:text-lg font-bold text-foreground tracking-tight">
+        Browse by Category
+      </h2>
+      <span className="text-[11px] font-medium text-muted-foreground">Click a tile to filter</span>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
       {QUICK_LINKS.map(({ label, Icon, gradient }) => {
@@ -32,13 +35,13 @@ const CategoryQuickLinks = ({ active, counts, onSelect }: Props) => (
           <button
             key={label}
             onClick={() => onSelect(label)}
-            className={`group relative overflow-hidden rounded-xl p-3 text-left transition-all border ${
+            className={`group relative overflow-hidden rounded-xl p-3.5 text-left transition-all border-2 shadow-sm hover:shadow-md ${
               isActive
-                ? "border-primary/60 glow-primary"
-                : "border-border/60 hover:border-primary/40 hover:-translate-y-0.5"
+                ? "border-primary glow-primary"
+                : "border-border hover:border-primary/50 hover:-translate-y-0.5"
             } glass`}
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-70 pointer-events-none`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90 pointer-events-none`} />
             <div className="relative flex flex-col gap-2">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                 isActive ? "bg-primary/25 text-primary" : "bg-background/40 text-foreground"
