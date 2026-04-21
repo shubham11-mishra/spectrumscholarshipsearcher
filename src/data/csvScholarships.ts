@@ -201,7 +201,7 @@ export async function fetchFilterOptions(): Promise<{
   while (true) {
     const { data, error } = await supabase
       .from("scholarships")
-      .select("state, school_sector, category, gender, value_type")
+      .select("state, sector, category, gender, value_type")
       .neq("scholarship_confidence", "not_found")
       .range(from, from + pageSize - 1);
 
@@ -212,7 +212,7 @@ export async function fetchFilterOptions(): Promise<{
 
     data.forEach((r: any) => {
       if (r.state?.trim()) sets.states.add(r.state.trim());
-      if (r.school_sector?.trim()) sets.sectors.add(r.school_sector.trim());
+      if (r.sector?.trim()) sets.sectors.add(r.sector.trim());
       if (r.category?.trim()) sets.categories.add(r.category.trim());
       if (r.gender?.trim()) sets.genders.add(r.gender.trim());
       if (r.value_type?.trim()) sets.valueTypes.add(r.value_type.trim());
