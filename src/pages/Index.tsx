@@ -160,12 +160,37 @@ const Index = () => {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // Sum raw category counts into the curated buckets shown on the quick-links
+  const bucketCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    CATEGORY_BUCKETS.forEach((b) => {
+      out[b.label] = b.values.reduce((sum, v) => sum + (rawCategoryCounts[v] ?? 0), 0);
+    });
+    return out;
+  }, [rawCategoryCounts]);
+
+  const toggleCategoryBucket = (label: string) => {
+    setCategoryFilters((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+    // Smooth-scroll to the results so users see the filter take effect
+    requestAnimationFrame(() => {
+      document.getElementById("results-grid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <HeroSection searchQuery={searchInput} onSearchChange={setSearchInput} onSearch={handleSearch} />
 
       {user && interests.length === 0 && <InterestSetupBanner />}
+
+      <CategoryQuickLinks
+        active={categoryFilters}
+        counts={bucketCounts}
+        onSelect={toggleCategoryBucket}
+      />
 
       {user && interests.length > 0 && (
         <div className="max-w-[1200px] mx-auto px-4 md:px-8 pb-3 animate-fade-up">
