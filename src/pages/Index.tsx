@@ -10,6 +10,7 @@ import {
   fetchScholarshipsPage,
   fetchFilterOptions,
   fetchConfidenceCounts,
+  fetchCategoryCounts,
 } from "@/data/csvScholarships";
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,11 +86,13 @@ const Index = () => {
     valueTypes: [] as string[],
   });
   const [counts, setCounts] = useState({ all: 0, high: 0, medium: 0, low: 0 });
+  const [rawCategoryCounts, setRawCategoryCounts] = useState<Record<string, number>>({});
 
   // One-time: load filter options + counts
   useEffect(() => {
     fetchFilterOptions().then(setFilterOptions);
     fetchConfidenceCounts().then(setCounts);
+    fetchCategoryCounts().then(setRawCategoryCounts);
   }, []);
 
   // Debounce search input
