@@ -18,6 +18,28 @@ type ConfidenceFilter = "all" | "high" | "medium" | "low";
 
 const PAGE_SIZE = 50;
 
+// Curated category buckets shown in the sidebar. Each bucket maps to one or
+// more underlying `category` values stored in the DB so we can present a
+// cleaner, more meaningful taxonomy to users.
+const CATEGORY_BUCKETS: { label: string; values: string[] }[] = [
+  { label: "Academic", values: ["Academic", "All-Rounder", "Leadership"] },
+  { label: "Arts", values: ["Performing Arts", "Visual Arts", "Music"] },
+  { label: "Sports", values: ["Sports", "Sport"] },
+  { label: "Cultural", values: ["Cultural"] },
+  { label: "Financial Need", values: ["Financial Need"] },
+  { label: "STEM", values: ["STEM"] },
+  { label: "School-Specific", values: ["School-Specific", "General", "Other"] },
+];
+
+const expandCategoryBuckets = (labels: string[]): string[] => {
+  const out = new Set<string>();
+  labels.forEach((l) => {
+    const bucket = CATEGORY_BUCKETS.find((b) => b.label === l);
+    (bucket ? bucket.values : [l]).forEach((v) => out.add(v));
+  });
+  return [...out];
+};
+
 // Expand a user interest into the actual category values stored in DB
 const INTEREST_TO_CATEGORIES: Record<string, string[]> = {
   academic: ["Academic"],
@@ -98,7 +120,7 @@ const Index = () => {
       confidence: confidenceFilter,
       states: stateFilters,
       sectors: sectorFilters,
-      categories: categoryFilters,
+      categories: expandCategoryBuckets(categoryFilters),
       genders: genderFilters,
       valueTypes: valueTypeFilters,
       interestCategories,
@@ -197,7 +219,7 @@ const Index = () => {
 
             <FilterCheckGroup label="State" selected={stateFilters} onToggle={(v) => toggleInArray(v, stateFilters, setStateFilters)} options={filterOptions.states} noScroll />
             <FilterCheckGroup label="School Sector" selected={sectorFilters} onToggle={(v) => toggleInArray(v, sectorFilters, setSectorFilters)} options={filterOptions.sectors} />
-            <FilterCheckGroup label="Category" selected={categoryFilters} onToggle={(v) => toggleInArray(v, categoryFilters, setCategoryFilters)} options={filterOptions.categories} />
+            <FilterCheckGroup label="Category" selected={categoryFilters} onToggle={(v) => toggleInArray(v, categoryFilters, setCategoryFilters)} options={CATEGORY_BUCKETS.map((b) => b.label)} />
             <FilterCheckGroup label="Gender" selected={genderFilters} onToggle={(v) => toggleInArray(v, genderFilters, setGenderFilters)} options={filterOptions.genders} />
             <FilterCheckGroup label="Value Type" selected={valueTypeFilters} onToggle={(v) => toggleInArray(v, valueTypeFilters, setValueTypeFilters)} options={filterOptions.valueTypes} />
           </aside>
