@@ -123,8 +123,22 @@ function applyFilters(query: any, q: ScholarshipQuery) {
   if (q.search?.trim()) {
     const s = q.search.trim().replace(/[%,]/g, " ");
     const pattern = `%${s}%`;
+    // Map full Australian state names to their stored abbreviations so users
+    // can search "Victoria" or "New South Wales" and still get results.
+    const STATE_ALIASES: Record<string, string> = {
+      "new south wales": "NSW",
+      "victoria": "VIC",
+      "queensland": "QLD",
+      "south australia": "SA",
+      "western australia": "WA",
+      "tasmania": "TAS",
+      "northern territory": "NT",
+      "australian capital territory": "ACT",
+    };
+    const aliasAbbr = STATE_ALIASES[s.toLowerCase()];
+    const aliasClause = aliasAbbr ? `,state.ilike.%${aliasAbbr}%` : "";
     query = query.or(
-      `school_name.ilike.${pattern},suburb.ilike.${pattern},postcode.ilike.${pattern},program_name.ilike.${pattern},state.ilike.${pattern}`
+      `school_name.ilike.${pattern},suburb.ilike.${pattern},postcode.ilike.${pattern},program_name.ilike.${pattern},state.ilike.${pattern}${aliasClause}`
     );
   }
   return query;
