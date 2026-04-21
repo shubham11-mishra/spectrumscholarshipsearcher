@@ -247,6 +247,28 @@ export async function fetchConfidenceCounts(): Promise<{ all: number; high: numb
   };
 }
 
+// Returns total count per raw `category` value, excluding not_found
+export async function fetchCategoryCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await supabase
+      .from("scholarships")
+      .select("category")
+      .neq("scholarship_confidence", "not_found")
+      .range(from, from + pageSize - 1);
+    if (error || !data) break;
+    data.forEach((r: any) => {
+      const c = r.category?.trim();
+      if (c) counts[c] = (counts[c] ?? 0) + 1;
+    });
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return counts;
+}
+
 // Kept for Shortlist page — loads only the user's shortlisted ids
 export async function fetchScholarshipsByIds(ids: string[]): Promise<SchoolScholarship[]> {
   if (ids.length === 0) return [];
