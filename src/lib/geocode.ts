@@ -1,6 +1,6 @@
 import postcodes from "@/data/auPostcodes.json";
 
-const PC_MAP = postcodes as Record<string, [number, number]>;
+const PC_MAP = postcodes as unknown as Record<string, [number, number]>;
 
 // State capital fallbacks for any postcode missing from the lookup.
 const STATE_FALLBACK: Record<string, [number, number]> = {
