@@ -102,24 +102,35 @@ const Auth = () => {
           options: {
             data: {
               full_name: fullName,
-              interests: selectedCategories,
               state: stateCode,
               postcode: postcode.trim(),
-              suburb: suburb.trim(),
-              year_level: yearLevel,
-              gender,
-              sector,
-              max_distance_km: String(maxDistance),
             },
           },
         });
         // Ignore email rate limit errors since auto-confirm is enabled
         if (error && !error.message.toLowerCase().includes("rate limit")) throw error;
 
-        // Save interests
         if (data?.session?.user) {
+          const userId = data.session.user.id;
+
+          // Explicitly save the user's preferences to their profile.
+          // The signup trigger only stores the basics (name, email, state, postcode);
+          // these optional fields are saved here because the user pressed "Create account".
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({
+              suburb: suburb.trim() || null,
+              year_level: yearLevel,
+              gender,
+              sector,
+              max_distance_km: maxDistance,
+            })
+            .eq("id", userId);
+          if (profileError) throw profileError;
+
+          // Save interests
           const inserts = selectedCategories.map((category) => ({
-            user_id: data.session.user.id,
+            user_id: userId,
             category,
           }));
           const { error: interestsError } = await supabase.from("user_interests").insert(inserts);
