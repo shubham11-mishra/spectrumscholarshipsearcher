@@ -19,11 +19,8 @@ export type Database = {
           created_at: string
           email: string | null
           full_name: string | null
-          gender: string | null
           id: string
-          max_distance_km: number | null
           postcode: string
-          sector: string | null
           state: string
           suburb: string | null
           year_level: string | null
@@ -32,11 +29,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string | null
-          gender?: string | null
           id: string
-          max_distance_km?: number | null
           postcode: string
-          sector?: string | null
           state: string
           suburb?: string | null
           year_level?: string | null
@@ -45,11 +39,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           full_name?: string | null
-          gender?: string | null
           id?: string
-          max_distance_km?: number | null
           postcode?: string
-          sector?: string | null
           state?: string
           suburb?: string | null
           year_level?: string | null
