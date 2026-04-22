@@ -20,8 +20,8 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          postcode: string | null
-          state: string | null
+          postcode: string
+          state: string
           suburb: string | null
         }
         Insert: {
@@ -29,8 +29,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          postcode?: string | null
-          state?: string | null
+          postcode: string
+          state: string
           suburb?: string | null
         }
         Update: {
@@ -38,8 +38,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          postcode?: string | null
-          state?: string | null
+          postcode?: string
+          state?: string
           suburb?: string | null
         }
         Relationships: []
