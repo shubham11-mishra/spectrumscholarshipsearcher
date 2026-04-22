@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Eye, EyeOff, Sparkles, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin } from "lucide-react";
 
 const CATEGORIES = ["Academic", "Music", "Sport", "General"];
+const AU_STATES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +14,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [stateCode, setStateCode] = useState("");
+  const [postcode, setPostcode] = useState("");
+  const [suburb, setSuburb] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -47,10 +51,23 @@ const Auth = () => {
           setSubmitting(false);
           return;
         }
+        if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
+          setError("Please select your state and enter a valid 4-digit postcode.");
+          setSubmitting(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName, interests: selectedCategories } },
+          options: {
+            data: {
+              full_name: fullName,
+              interests: selectedCategories,
+              state: stateCode,
+              postcode: postcode.trim(),
+              suburb: suburb.trim(),
+            },
+          },
         });
         // Ignore email rate limit errors since auto-confirm is enabled
         if (error && !error.message.toLowerCase().includes("rate limit")) throw error;
@@ -173,6 +190,48 @@ const Auth = () => {
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* Location for signup — used to surface nearby schools */}
+            {!isLogin && (
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5" /> Where are you located?
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={stateCode}
+                    onChange={(e) => setStateCode(e.target.value)}
+                    required={!isLogin}
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                  >
+                    <option value="">State</option>
+                    {AU_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={postcode}
+                    onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    required={!isLogin}
+                    inputMode="numeric"
+                    pattern="\d{4}"
+                    placeholder="Postcode"
+                    className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={suburb}
+                  onChange={(e) => setSuburb(e.target.value)}
+                  placeholder="Suburb (optional)"
+                  className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  We'll use this to surface scholarships at schools near you.
+                </p>
               </div>
             )}
 

@@ -5,6 +5,7 @@ import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
 import CategoryQuickLinks from "@/components/CategoryQuickLinks";
+import NearbySchoolsSection from "@/components/NearbySchoolsSection";
 import {
   SchoolScholarship,
   fetchScholarshipsPage,
@@ -185,6 +186,8 @@ const Index = () => {
       <HeroSection searchQuery={searchInput} onSearchChange={setSearchInput} onSearch={handleSearch} />
 
       {user && interests.length === 0 && <InterestSetupBanner />}
+
+      <NearbySchoolsSection />
 
       <CategoryQuickLinks
         active={categoryFilters}
