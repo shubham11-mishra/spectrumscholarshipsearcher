@@ -75,6 +75,8 @@ const Auth = () => {
               full_name: fullName,
               state: stateCode,
               postcode: postcode.trim(),
+              suburb: suburb.trim(),
+              year_level: yearLevel,
             },
           },
         });
@@ -84,17 +86,7 @@ const Auth = () => {
         if (data?.session?.user) {
           const userId = data.session.user.id;
 
-          // Explicitly save year level + suburb to profile after the user submits.
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .update({
-              suburb: suburb.trim() || null,
-              year_level: yearLevel,
-            })
-            .eq("id", userId);
-          if (profileError) throw profileError;
-
-          // Save interests
+          // Save interests (profile fields are written by the signup DB trigger)
           const inserts = selectedCategories.map((category) => ({
             user_id: userId,
             category,
