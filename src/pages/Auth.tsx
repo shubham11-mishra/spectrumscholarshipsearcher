@@ -464,7 +464,7 @@ const Auth = () => {
 
           <div className="mt-3 text-center">
             <button
-              onClick={() => { setIsLogin(!isLogin); setError(""); }}
+              onClick={() => { setIsLogin(!isLogin); setError(""); setStep(1); }}
               className="text-sm text-muted-foreground hover:text-primary transition-colors bg-transparent border-none cursor-pointer"
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
