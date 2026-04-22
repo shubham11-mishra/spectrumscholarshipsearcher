@@ -193,6 +193,48 @@ const Auth = () => {
               </div>
             )}
 
+            {/* Location for signup — used to surface nearby schools */}
+            {!isLogin && (
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5" /> Where are you located?
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={stateCode}
+                    onChange={(e) => setStateCode(e.target.value)}
+                    required={!isLogin}
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                  >
+                    <option value="">State</option>
+                    {AU_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={postcode}
+                    onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    required={!isLogin}
+                    inputMode="numeric"
+                    pattern="\d{4}"
+                    placeholder="Postcode"
+                    className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={suburb}
+                  onChange={(e) => setSuburb(e.target.value)}
+                  placeholder="Suburb (optional)"
+                  className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  We'll use this to surface scholarships at schools near you.
+                </p>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
