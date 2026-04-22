@@ -97,6 +97,7 @@ export interface ScholarshipQuery {
   genders?: string[];
   valueTypes?: string[];
   interestCategories?: string[]; // ORs across these (uses category aliases handled client-side via expansion before passing in)
+  yearLevel?: string | null; // e.g. "Year 7" — matches if the row's year_levels text contains it
   sortBy?: "closing" | "name" | "suburb" | "confidence" | "value";
   page?: number;
   pageSize?: number;
@@ -120,6 +121,12 @@ function applyFilters(query: any, q: ScholarshipQuery) {
   if (q.genders?.length) query = query.in("gender", q.genders);
   if (q.valueTypes?.length) query = query.in("value_type", q.valueTypes);
   if (q.interestCategories?.length) query = query.in("category", q.interestCategories);
+  if (q.yearLevel?.trim()) {
+    // year_levels is a text field that typically contains a comma-separated
+    // list like "Year 7, Year 8, Year 9". Use ilike to match the user's level.
+    const yl = q.yearLevel.trim().replace(/[%,]/g, " ");
+    query = query.ilike("year_levels", `%${yl}%`);
+  }
   if (q.search?.trim()) {
     const s = q.search.trim().replace(/[%,]/g, " ");
     const pattern = `%${s}%`;
