@@ -2,11 +2,18 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+interface UserLocation {
+  state: string | null;
+  postcode: string | null;
+  suburb: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   interests: string[];
+  location: UserLocation;
   signOut: () => Promise<void>;
   refreshInterests: () => Promise<void>;
 }
@@ -16,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   interests: [],
+  location: { state: null, postcode: null, suburb: null },
   signOut: async () => {},
   refreshInterests: async () => {},
 });
@@ -27,6 +35,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [interests, setInterests] = useState<string[]>([]);
+  const [location, setLocation] = useState<UserLocation>({ state: null, postcode: null, suburb: null });
+
+  const fetchLocation = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("state, postcode, suburb")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) {
+      console.error("Error loading user profile location:", error);
+      return;
+    }
+    setLocation({
+      state: data?.state ?? null,
+      postcode: data?.postcode ?? null,
+      suburb: data?.suburb ?? null,
+    });
+  };
 
   const fetchInterests = async (userId: string) => {
     const { data, error } = await supabase
@@ -78,8 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           setTimeout(() => syncInterestsFromMetadata(session.user), 0);
+          setTimeout(() => fetchLocation(session.user.id), 0);
         } else {
           setInterests([]);
+          setLocation({ state: null, postcode: null, suburb: null });
         }
         setLoading(false);
       }
@@ -88,7 +116,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) syncInterestsFromMetadata(session.user);
+      if (session?.user) {
+        syncInterestsFromMetadata(session.user);
+        fetchLocation(session.user.id);
+      }
       setLoading(false);
     });
 
@@ -98,10 +129,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setInterests([]);
+    setLocation({ state: null, postcode: null, suburb: null });
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, interests, signOut, refreshInterests }}>
+    <AuthContext.Provider value={{ user, session, loading, interests, location, signOut, refreshInterests }}>
       {children}
     </AuthContext.Provider>
   );
