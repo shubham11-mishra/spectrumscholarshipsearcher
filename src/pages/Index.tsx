@@ -61,7 +61,7 @@ const expandInterests = (interests: string[]): string[] => {
 };
 
 const Index = () => {
-  const { user, interests } = useAuth();
+  const { user, interests, yearLevel } = useAuth();
   const [rows, setRows] = useState<SchoolScholarship[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -129,6 +129,7 @@ const Index = () => {
       genders: genderFilters,
       valueTypes: valueTypeFilters,
       interestCategories,
+      yearLevel: showPersonalized && !searchQuery ? yearLevel : null,
       sortBy,
       page,
       pageSize: PAGE_SIZE,
@@ -142,7 +143,7 @@ const Index = () => {
   }, [
     searchQuery, sortBy, confidenceFilter, page,
     sectorFilters, stateFilters, categoryFilters, genderFilters, valueTypeFilters,
-    interestCategories,
+    interestCategories, yearLevel, showPersonalized,
   ]);
 
   const handleSearch = () => setSearchQuery(searchInput.trim());
