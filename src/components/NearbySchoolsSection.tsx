@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SchoolScholarship } from "@/data/csvScholarships";
 import SchoolCard from "@/components/SchoolCard";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
-import { MapPin, Sparkles } from "lucide-react";
+import { MapPin, Sparkles, ChevronDown } from "lucide-react";
 
 const NEARBY_LIMIT = 6;
 
@@ -61,6 +61,7 @@ const NearbySchoolsSection = () => {
   const [rows, setRows] = useState<SchoolScholarship[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<SchoolScholarship | null>(null);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !location.state || !location.postcode) {
@@ -117,7 +118,13 @@ const NearbySchoolsSection = () => {
   return (
     <section className="max-w-[1280px] mx-auto px-4 md:px-8 pt-2 pb-6 animate-fade-up">
       <div className="glass rounded-2xl p-4 md:p-5">
-        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls="nearby-schools-panel"
+          className={`w-full flex items-center justify-between gap-3 flex-wrap text-left rounded-xl transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${open ? "mb-4" : ""}`}
+        >
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
               <MapPin className="w-4 h-4" />
@@ -135,11 +142,18 @@ const NearbySchoolsSection = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-primary font-semibold">
-            <Sparkles className="w-3.5 h-3.5" /> Personalized
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-[11px] text-primary font-semibold">
+              <Sparkles className="w-3.5 h-3.5" /> Personalized
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+            />
           </div>
-        </div>
+        </button>
 
+        {open && (
+        <div id="nearby-schools-panel">
         {loading ? (
           <div className="text-sm text-muted-foreground py-6 text-center">
             Finding nearby schools…
@@ -159,6 +173,8 @@ const NearbySchoolsSection = () => {
               />
             ))}
           </div>
+        )}
+        </div>
         )}
       </div>
       <SchoolDetailModal school={selected} onClose={() => setSelected(null)} />
