@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Eye, EyeOff, Sparkles, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin } from "lucide-react";
 
 const CATEGORIES = ["Academic", "Music", "Sport", "General"];
+const AU_STATES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,6 +14,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [stateCode, setStateCode] = useState("");
+  const [postcode, setPostcode] = useState("");
+  const [suburb, setSuburb] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
