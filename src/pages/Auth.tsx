@@ -3,10 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
-import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin } from "lucide-react";
+import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin, ArrowLeft, ArrowRight, GraduationCap, Heart, SlidersHorizontal } from "lucide-react";
 
 const CATEGORIES = ["Academic", "Music", "Sport", "General"];
 const AU_STATES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
+const YEAR_LEVELS = ["Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12"];
+const GENDERS = ["Any", "Boys", "Girls", "Co-ed"];
+const SECTORS = ["Any", "Independent", "Catholic", "Government"];
+const DISTANCES = [
+  { label: "5 km", value: 5 },
+  { label: "10 km", value: 10 },
+  { label: "25 km", value: 25 },
+  { label: "50 km", value: 50 },
+  { label: "Any", value: 999 },
+];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
