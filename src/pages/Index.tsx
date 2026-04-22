@@ -5,6 +5,7 @@ import InterestSetupBanner from "@/components/InterestSetupBanner";
 import SchoolCard from "@/components/SchoolCard";
 import SchoolDetailModal from "@/components/SchoolDetailModal";
 import CategoryQuickLinks from "@/components/CategoryQuickLinks";
+import NearbySchoolsSection from "@/components/NearbySchoolsSection";
 import {
   SchoolScholarship,
   fetchScholarshipsPage,
