@@ -81,6 +81,10 @@ const Auth = () => {
               state: stateCode,
               postcode: postcode.trim(),
               suburb: suburb.trim(),
+              year_level: yearLevel,
+              gender,
+              sector,
+              max_distance_km: String(maxDistance),
             },
           },
         });
