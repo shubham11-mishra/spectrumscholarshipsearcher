@@ -1,26 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
-import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin, ArrowLeft, ArrowRight, GraduationCap, Heart, SlidersHorizontal } from "lucide-react";
+import { Eye, EyeOff, Sparkles, CheckCircle2, MapPin, GraduationCap, Heart } from "lucide-react";
 
 const CATEGORIES = ["Academic", "Music", "Sport", "General"];
 const AU_STATES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
 const YEAR_LEVELS = ["Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10", "Year 11", "Year 12"];
-const GENDERS = ["Any", "Boys", "Girls", "Co-ed"];
-const SECTORS = ["Any", "Independent", "Catholic", "Government"];
-const DISTANCES = [
-  { label: "5 km", value: 5 },
-  { label: "10 km", value: 10 },
-  { label: "25 km", value: 25 },
-  { label: "50 km", value: 50 },
-  { label: "Any", value: 999 },
-];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -29,9 +18,6 @@ const Auth = () => {
   const [postcode, setPostcode] = useState("");
   const [suburb, setSuburb] = useState("");
   const [yearLevel, setYearLevel] = useState("");
-  const [gender, setGender] = useState("Any");
-  const [sector, setSector] = useState("Any");
-  const [maxDistance, setMaxDistance] = useState<number>(25);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,31 +36,6 @@ const Auth = () => {
     );
   };
 
-  const handleNext = () => {
-    setError("");
-    if (step === 1) {
-      if (!fullName.trim() || !email.trim() || password.length < 6) {
-        setError("Please fill in your name, email, and a password (6+ chars).");
-        return;
-      }
-      if (!yearLevel) {
-        setError("Please select your current year level.");
-        return;
-      }
-      if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
-        setError("Please select your state and enter a valid 4-digit postcode.");
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
-      if (selectedCategories.length === 0) {
-        setError("Please select at least one interest.");
-        return;
-      }
-      setStep(3);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -86,13 +47,23 @@ const Auth = () => {
         if (error) throw error;
         navigate("/");
       } else {
-        if (selectedCategories.length === 0) {
-          setError("Please select at least one interest category.");
+        if (!fullName.trim() || !email.trim() || password.length < 6) {
+          setError("Please fill in your name, email, and a password (6+ chars).");
+          setSubmitting(false);
+          return;
+        }
+        if (!yearLevel) {
+          setError("Please select your current year level.");
           setSubmitting(false);
           return;
         }
         if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
           setError("Please select your state and enter a valid 4-digit postcode.");
+          setSubmitting(false);
+          return;
+        }
+        if (selectedCategories.length === 0) {
+          setError("Please select at least one interest category.");
           setSubmitting(false);
           return;
         }
@@ -113,17 +84,12 @@ const Auth = () => {
         if (data?.session?.user) {
           const userId = data.session.user.id;
 
-          // Explicitly save the user's preferences to their profile.
-          // The signup trigger only stores the basics (name, email, state, postcode);
-          // these optional fields are saved here because the user pressed "Create account".
+          // Explicitly save year level + suburb to profile after the user submits.
           const { error: profileError } = await supabase
             .from("profiles")
             .update({
               suburb: suburb.trim() || null,
               year_level: yearLevel,
-              gender,
-              sector,
-              max_distance_km: maxDistance,
             })
             .eq("id", userId);
           if (profileError) throw profileError;
@@ -163,26 +129,8 @@ const Auth = () => {
           <p className="text-sm text-muted-foreground text-center mb-6">
             {isLogin
               ? "Sign in to see your personalized scholarships"
-              : step === 1
-              ? "Step 1 of 3 — your details & location"
-              : step === 2
-              ? "Step 2 of 3 — your interests"
-              : "Step 3 of 3 — your preferences"}
+              : "Tell us a bit about you to personalize your matches"}
           </p>
-
-          {/* Step indicator (signup only) */}
-          {!isLogin && (
-            <div className="flex items-center justify-center gap-2 mb-5">
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className={`h-1.5 rounded-full transition-all ${
-                    step === n ? "w-8 bg-primary" : step > n ? "w-6 bg-primary/60" : "w-6 bg-border"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
 
           {error && (
             <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-xl px-4 py-2.5 mb-4">
@@ -192,7 +140,7 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* LOGIN: name field hidden */}
-            {!isLogin && step === 1 && (
+            {!isLogin && (
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Full Name</label>
                 <input
@@ -206,10 +154,8 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Email + Password — shown on login, and on step 1 of signup */}
-            {(isLogin || step === 1) && (
-              <>
-                <div>
+            {/* Email + Password — always shown */}
+            <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Email</label>
                   <input
                     type="email"
@@ -242,11 +188,9 @@ const Auth = () => {
                     </button>
                   </div>
                 </div>
-              </>
-            )}
 
-            {/* SIGNUP STEP 1 — Year level + Location */}
-            {!isLogin && step === 1 && (
+            {/* SIGNUP — Year level + Location + Interests on a single page */}
+            {!isLogin && (
               <>
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
@@ -300,12 +244,8 @@ const Auth = () => {
                     className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
                   />
                 </div>
-              </>
-            )}
 
-            {/* SIGNUP STEP 2 — Interests */}
-            {!isLogin && step === 2 && (
-              <div>
+                <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <Heart className="w-3.5 h-3.5" /> Pick your interests & strengths
                 </label>
@@ -330,118 +270,27 @@ const Auth = () => {
                   })}
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-2">Select all that apply.</p>
-              </div>
+                </div>
+              </>
             )}
 
-            {/* SIGNUP STEP 3 — Preferences */}
-            {!isLogin && step === 3 && (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-3.5 h-3.5" /> School type
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {GENDERS.map((g) => (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={() => setGender(g)}
-                        className={`rounded-xl border px-2 py-2 text-xs font-medium cursor-pointer transition-all ${
-                          gender === g
-                            ? "border-primary/50 bg-primary/10 text-primary"
-                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                        }`}
-                      >
-                        {g}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Sector</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {SECTORS.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setSector(s)}
-                        className={`rounded-xl border px-3 py-2 text-xs font-medium cursor-pointer transition-all ${
-                          sector === s
-                            ? "border-primary/50 bg-primary/10 text-primary"
-                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Max distance from you</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {DISTANCES.map((d) => (
-                      <button
-                        key={d.value}
-                        type="button"
-                        onClick={() => setMaxDistance(d.value)}
-                        className={`rounded-xl border px-2 py-2 text-xs font-medium cursor-pointer transition-all ${
-                          maxDistance === d.value
-                            ? "border-primary/50 bg-primary/10 text-primary"
-                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Action buttons */}
-            {isLogin ? (
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
-              >
-                <Sparkles className="w-4 h-4" />
-                {submitting ? "Please wait..." : "Sign In"}
-              </button>
-            ) : (
-              <div className="flex gap-2 pt-1">
-                {step > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => { setStep((s) => (s - 1) as 1 | 2 | 3); setError(""); }}
-                    className="flex-1 rounded-xl border border-border bg-secondary text-foreground px-4 py-2.5 text-sm font-semibold cursor-pointer hover:border-primary/40 transition-all flex items-center justify-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" /> Back
-                  </button>
-                )}
-                {step < 3 ? (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 border-none"
-                  >
-                    Continue <ArrowRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {submitting ? "Creating..." : "Create Account"}
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Action button */}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
+            >
+              <Sparkles className="w-4 h-4" />
+              {submitting ? (isLogin ? "Please wait..." : "Creating...") : isLogin ? "Sign In" : "Create Account"}
+            </button>
           </form>
+
+          {/* (removed legacy multi-step action buttons) */}
+          {false && (
+            <div className="hidden">
+              {/* placeholder to keep diff small */}
+              </div>
+            )}
 
           {isLogin && (
             <div className="mt-3 text-center">
@@ -475,7 +324,7 @@ const Auth = () => {
 
           <div className="mt-3 text-center">
             <button
-              onClick={() => { setIsLogin(!isLogin); setError(""); setStep(1); }}
+              onClick={() => { setIsLogin(!isLogin); setError(""); }}
               className="text-sm text-muted-foreground hover:text-primary transition-colors bg-transparent border-none cursor-pointer"
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
