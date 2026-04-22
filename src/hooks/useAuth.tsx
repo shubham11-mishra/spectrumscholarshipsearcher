@@ -14,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   interests: string[];
   location: UserLocation;
+  yearLevel: string | null;
   signOut: () => Promise<void>;
   refreshInterests: () => Promise<void>;
 }
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   interests: [],
   location: { state: null, postcode: null, suburb: null },
+  yearLevel: null,
   signOut: async () => {},
   refreshInterests: async () => {},
 });
@@ -36,11 +38,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [interests, setInterests] = useState<string[]>([]);
   const [location, setLocation] = useState<UserLocation>({ state: null, postcode: null, suburb: null });
+  const [yearLevel, setYearLevel] = useState<string | null>(null);
 
   const fetchLocation = async (userId: string) => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("state, postcode, suburb")
+      .select("state, postcode, suburb, year_level")
       .eq("id", userId)
       .maybeSingle();
     if (error) {
@@ -52,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       postcode: data?.postcode ?? null,
       suburb: data?.suburb ?? null,
     });
+    setYearLevel(data?.year_level ?? null);
   };
 
   const fetchInterests = async (userId: string) => {
@@ -108,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setInterests([]);
           setLocation({ state: null, postcode: null, suburb: null });
+          setYearLevel(null);
         }
         setLoading(false);
       }
@@ -130,10 +135,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setInterests([]);
     setLocation({ state: null, postcode: null, suburb: null });
+    setYearLevel(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, interests, location, signOut, refreshInterests }}>
+    <AuthContext.Provider value={{ user, session, loading, interests, location, yearLevel, signOut, refreshInterests }}>
       {children}
     </AuthContext.Provider>
   );
