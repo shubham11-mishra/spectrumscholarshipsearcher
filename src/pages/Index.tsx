@@ -187,6 +187,8 @@ const Index = () => {
 
       {user && interests.length === 0 && <InterestSetupBanner />}
 
+      <NearbySchoolsSection />
+
       <CategoryQuickLinks
         active={categoryFilters}
         counts={bucketCounts}
