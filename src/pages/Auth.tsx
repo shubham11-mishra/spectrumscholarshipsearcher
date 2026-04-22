@@ -10,7 +10,6 @@ const YEAR_LEVELS = ["Year 5", "Year 6", "Year 7", "Year 8", "Year 9", "Year 10"
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -19,9 +18,6 @@ const Auth = () => {
   const [postcode, setPostcode] = useState("");
   const [suburb, setSuburb] = useState("");
   const [yearLevel, setYearLevel] = useState("");
-  const [gender, setGender] = useState("Any");
-  const [sector, setSector] = useState("Any");
-  const [maxDistance, setMaxDistance] = useState<number>(25);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -40,31 +36,6 @@ const Auth = () => {
     );
   };
 
-  const handleNext = () => {
-    setError("");
-    if (step === 1) {
-      if (!fullName.trim() || !email.trim() || password.length < 6) {
-        setError("Please fill in your name, email, and a password (6+ chars).");
-        return;
-      }
-      if (!yearLevel) {
-        setError("Please select your current year level.");
-        return;
-      }
-      if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
-        setError("Please select your state and enter a valid 4-digit postcode.");
-        return;
-      }
-      setStep(2);
-    } else if (step === 2) {
-      if (selectedCategories.length === 0) {
-        setError("Please select at least one interest.");
-        return;
-      }
-      setStep(3);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -76,13 +47,23 @@ const Auth = () => {
         if (error) throw error;
         navigate("/");
       } else {
-        if (selectedCategories.length === 0) {
-          setError("Please select at least one interest category.");
+        if (!fullName.trim() || !email.trim() || password.length < 6) {
+          setError("Please fill in your name, email, and a password (6+ chars).");
+          setSubmitting(false);
+          return;
+        }
+        if (!yearLevel) {
+          setError("Please select your current year level.");
           setSubmitting(false);
           return;
         }
         if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
           setError("Please select your state and enter a valid 4-digit postcode.");
+          setSubmitting(false);
+          return;
+        }
+        if (selectedCategories.length === 0) {
+          setError("Please select at least one interest category.");
           setSubmitting(false);
           return;
         }
@@ -103,17 +84,12 @@ const Auth = () => {
         if (data?.session?.user) {
           const userId = data.session.user.id;
 
-          // Explicitly save the user's preferences to their profile.
-          // The signup trigger only stores the basics (name, email, state, postcode);
-          // these optional fields are saved here because the user pressed "Create account".
+          // Explicitly save year level + suburb to profile after the user submits.
           const { error: profileError } = await supabase
             .from("profiles")
             .update({
               suburb: suburb.trim() || null,
               year_level: yearLevel,
-              gender,
-              sector,
-              max_distance_km: maxDistance,
             })
             .eq("id", userId);
           if (profileError) throw profileError;
