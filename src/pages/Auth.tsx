@@ -47,10 +47,23 @@ const Auth = () => {
           setSubmitting(false);
           return;
         }
+        if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
+          setError("Please select your state and enter a valid 4-digit postcode.");
+          setSubmitting(false);
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName, interests: selectedCategories } },
+          options: {
+            data: {
+              full_name: fullName,
+              interests: selectedCategories,
+              state: stateCode,
+              postcode: postcode.trim(),
+              suburb: suburb.trim(),
+            },
+          },
         });
         // Ignore email rate limit errors since auto-confirm is enabled
         if (error && !error.message.toLowerCase().includes("rate limit")) throw error;
