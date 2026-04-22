@@ -50,6 +50,31 @@ const Auth = () => {
     );
   };
 
+  const handleNext = () => {
+    setError("");
+    if (step === 1) {
+      if (!fullName.trim() || !email.trim() || password.length < 6) {
+        setError("Please fill in your name, email, and a password (6+ chars).");
+        return;
+      }
+      if (!yearLevel) {
+        setError("Please select your current year level.");
+        return;
+      }
+      if (!stateCode || !/^\d{4}$/.test(postcode.trim())) {
+        setError("Please select your state and enter a valid 4-digit postcode.");
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (selectedCategories.length === 0) {
+        setError("Please select at least one interest.");
+        return;
+      }
+      setStep(3);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
