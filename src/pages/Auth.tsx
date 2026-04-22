@@ -150,8 +150,28 @@ const Auth = () => {
             {isLogin ? "Welcome back" : "Create your account"}
           </h1>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            {isLogin ? "Sign in to see your personalized scholarships" : "Sign up and pick your interests"}
+            {isLogin
+              ? "Sign in to see your personalized scholarships"
+              : step === 1
+              ? "Step 1 of 3 — your details & location"
+              : step === 2
+              ? "Step 2 of 3 — your interests"
+              : "Step 3 of 3 — your preferences"}
           </p>
+
+          {/* Step indicator (signup only) */}
+          {!isLogin && (
+            <div className="flex items-center justify-center gap-2 mb-5">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className={`h-1.5 rounded-full transition-all ${
+                    step === n ? "w-8 bg-primary" : step > n ? "w-6 bg-primary/60" : "w-6 bg-border"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {error && (
             <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-xl px-4 py-2.5 mb-4">
@@ -160,7 +180,8 @@ const Auth = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {/* LOGIN: name field hidden */}
+            {!isLogin && step === 1 && (
               <div>
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Full Name</label>
                 <input
@@ -174,45 +195,108 @@ const Auth = () => {
               </div>
             )}
 
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-              />
-            </div>
+            {/* Email + Password — shown on login, and on step 1 of signup */}
+            {(isLogin || step === 1) && (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  />
+                </div>
 
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
-            {/* Category selection for signup */}
-            {!isLogin && (
+            {/* SIGNUP STEP 1 — Year level + Location */}
+            {!isLogin && step === 1 && (
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5" /> Current year level
+                  </label>
+                  <select
+                    value={yearLevel}
+                    onChange={(e) => setYearLevel(e.target.value)}
+                    required
+                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                  >
+                    <option value="">Select year level</option>
+                    {YEAR_LEVELS.map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5" /> Where are you located?
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={stateCode}
+                      onChange={(e) => setStateCode(e.target.value)}
+                      required
+                      className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                    >
+                      <option value="">State</option>
+                      {AU_STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={postcode}
+                      onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      required
+                      inputMode="numeric"
+                      pattern="\d{4}"
+                      placeholder="Postcode"
+                      className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={suburb}
+                    onChange={(e) => setSuburb(e.target.value)}
+                    placeholder="Suburb (optional)"
+                    className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* SIGNUP STEP 2 — Interests */}
+            {!isLogin && step === 2 && (
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                  Select your interests
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5" /> Pick your interests & strengths
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {CATEGORIES.map((cat) => {
@@ -234,59 +318,118 @@ const Auth = () => {
                     );
                   })}
                 </div>
+                <p className="text-[11px] text-muted-foreground mt-2">Select all that apply.</p>
               </div>
             )}
 
-            {/* Location for signup — used to surface nearby schools */}
-            {!isLogin && (
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5" /> Where are you located?
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={stateCode}
-                    onChange={(e) => setStateCode(e.target.value)}
-                    required={!isLogin}
-                    className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
-                  >
-                    <option value="">State</option>
-                    {AU_STATES.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+            {/* SIGNUP STEP 3 — Preferences */}
+            {!isLogin && step === 3 && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-3.5 h-3.5" /> School type
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {GENDERS.map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setGender(g)}
+                        className={`rounded-xl border px-2 py-2 text-xs font-medium cursor-pointer transition-all ${
+                          gender === g
+                            ? "border-primary/50 bg-primary/10 text-primary"
+                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        {g}
+                      </button>
                     ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    required={!isLogin}
-                    inputMode="numeric"
-                    pattern="\d{4}"
-                    placeholder="Postcode"
-                    className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-                  />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={suburb}
-                  onChange={(e) => setSuburb(e.target.value)}
-                  placeholder="Suburb (optional)"
-                  className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  We'll use this to surface scholarships at schools near you.
-                </p>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Sector</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SECTORS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSector(s)}
+                        className={`rounded-xl border px-3 py-2 text-xs font-medium cursor-pointer transition-all ${
+                          sector === s
+                            ? "border-primary/50 bg-primary/10 text-primary"
+                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Max distance from you</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {DISTANCES.map((d) => (
+                      <button
+                        key={d.value}
+                        type="button"
+                        onClick={() => setMaxDistance(d.value)}
+                        className={`rounded-xl border px-2 py-2 text-xs font-medium cursor-pointer transition-all ${
+                          maxDistance === d.value
+                            ? "border-primary/50 bg-primary/10 text-primary"
+                            : "border-border bg-secondary text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
-            >
-              <Sparkles className="w-4 h-4" />
-              {submitting ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-            </button>
+            {/* Action buttons */}
+            {isLogin ? (
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
+              >
+                <Sparkles className="w-4 h-4" />
+                {submitting ? "Please wait..." : "Sign In"}
+              </button>
+            ) : (
+              <div className="flex gap-2 pt-1">
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => { setStep((s) => (s - 1) as 1 | 2 | 3); setError(""); }}
+                    className="flex-1 rounded-xl border border-border bg-secondary text-foreground px-4 py-2.5 text-sm font-semibold cursor-pointer hover:border-primary/40 transition-all flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </button>
+                )}
+                {step < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 border-none"
+                  >
+                    Continue <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 border-none"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {submitting ? "Creating..." : "Create Account"}
+                  </button>
+                )}
+              </div>
+            )}
           </form>
 
           {isLogin && (
