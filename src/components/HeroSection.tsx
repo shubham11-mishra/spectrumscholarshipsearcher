@@ -1,4 +1,5 @@
 import { Search, Sparkles } from "lucide-react";
+import logoHorizontal from "@/assets/logo-horizontal.svg";
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -13,6 +14,11 @@ const HeroSection = ({ searchQuery, onSearchChange, onSearch }: HeroSectionProps
     <div className="absolute top-20 right-0 w-[200px] h-[200px] bg-gold/10 rounded-full blur-[80px] pointer-events-none animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
 
     <div className="relative z-10">
+      <img
+        src={logoHorizontal}
+        alt="Spectrum Scholarship Searcher horizontal logo"
+        className="mx-auto mb-8 h-16 md:h-20 w-auto"
+      />
       <div className="inline-flex items-center gap-2 glass px-4 py-1.5 rounded-full text-[12px] font-semibold mb-7 tracking-wide uppercase text-accent">
         <Sparkles className="w-3.5 h-3.5 text-gold animate-float" />
         2,400+ Scholarships · Updated Weekly
