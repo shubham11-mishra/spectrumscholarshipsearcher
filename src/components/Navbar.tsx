@@ -2,6 +2,7 @@ import { Sparkles, LogOut, User, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useShortlist } from "@/hooks/useShortlist";
 import { useNavigate } from "react-router-dom";
+import logoCompass from "@/assets/logo-compass.svg";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -11,9 +12,7 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 glass px-4 md:px-8 flex items-center justify-between h-14">
       <a href="/" className="flex items-center gap-2.5 font-display font-bold text-lg text-foreground no-underline tracking-tight">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-sm font-display font-bold shadow-md">
-          S
-        </div>
+        <img src={logoCompass} alt="Spectrum Scholarship Searcher logo" className="w-8 h-8" />
         <span className="gradient-text">Spectrum Scholarship Searcher</span>
       </a>
       <div className="flex items-center gap-1">
